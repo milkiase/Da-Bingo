@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+src/assets/voices1
+src/assets/chimes
+src/assets/fonts1
 node_modules
 dist
 dist-ssr
