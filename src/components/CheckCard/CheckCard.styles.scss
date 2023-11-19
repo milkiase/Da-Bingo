@@ -1,0 +1,18 @@
+.bingo-winner{
+    box-sizing: content-box !important;
+    font-family: var(--heading-font);
+    // width: 100%;
+    // background: green;
+    font-size: 70px;
+    font-weight: bolder;
+    text-align: right;
+    color: red !important;
+    border: solid red 4px;
+    background-color: gold !important;
+    padding-top: 4rem;
+    span{
+        color: green;
+    }
+    
+}
+

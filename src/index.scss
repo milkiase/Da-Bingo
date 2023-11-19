@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('./sass/typography.scss');  
+:root {
+    --primary-color: #00487b;
+    --secondary-color: #1396d3;
+    --condensed-font: "Roboto Condensed", sans-serif;
+    --heading-font: "Roboto Condensed", sans-serif;
+    --body-font: "Roboto", sans-serif;
+    --digital-font: "Digital", "Roboto Condensed", "Helvetica", cursive;
+    --release-color: #5cb3ee;
+    --bugfix-color: #ff8b9f;
+}
+
+body {
+    box-sizing: border-box !important;
+}
+
+span.border-2 {
+    border-collapse: collapse !important;
+    outline: none !important;
+}
+a.btn{
+    font-family: var(--body-font) !important;
+    text-transform: none !important;
+    font-size: smaller;    
+    font-weight: normal;
+}
+.welcome{
+    font-family: var(--body-font) !important;
+}
+/* Animations */
+@keyframes blink {
+    0% {
+        color: white;
+    }
+    50% {
+        color: #3c3c3c;
+    }
+    100% {
+        color: white;
+    }
+    }
+
+@keyframes bounce {
+    0% {
+        bottom: 2rem;
+    }
+    50% {
+        bottom: 2.5rem;
+    }
+    100% {
+        bottom: 2rem;
+    }
+}
