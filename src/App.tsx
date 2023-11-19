@@ -43,7 +43,7 @@ function App() {
           <Route path={`/game/:id`} element={<Game/>}></Route>
         </Routes> :
         <Routes>
-          <Route path='*' element={<Login/>}></Route>
+          <Route path='*' element={<Game/>}></Route>
         </Routes>
         }
         

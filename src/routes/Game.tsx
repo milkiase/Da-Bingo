@@ -7,9 +7,9 @@ import 'rc-slider/assets/index.css';
 
 import { addCall, resetGame, setCalls, setGameBetAmount, setGamePatternType, setGamePercentage, setGameWinAmount, setID, setIsWon, setPlayers} from '../store/game/gameSlice';
 import { selectCalls } from '../store/game/gameSelectors';
-// import { chime7} from '../assets/chimes';
-// import AmhCallVoices from '../assets/voices/Amh';
-// import TigCallVoices from '../assets/voices/Tig';
+import { chime7} from '../assets/chimes';
+import AmhCallVoices from '../assets/voices/Amh';
+import TigCallVoices from '../assets/voices/Tig';
 
 
 import { generateRandomNumbers, getColor, getLast5Calls, getLetter, TLastCall} from '../utils/game.utils';
@@ -126,22 +126,22 @@ function Game() {
         fetchGame((id as string))
     }, [])
 
-    // const say = (number:number)=>{
-    //     let callVoice
-    //     if(language === 'Amh' || number === 39){
-    //         const prop = ('callVoice' + number )as (keyof typeof AmhCallVoices)
-    //         callVoice = AmhCallVoices[prop]
-    //     }else{
-    //         const prop = ('callVoice' + number )as (keyof typeof TigCallVoices)
-    //         callVoice = TigCallVoices[prop]
-    //     }
-    //     const voice = new Audio(callVoice)
-    //     voice.play()
-    // }
-    // const chimeSound = useMemo(()=>{
-    //     const sound = new Audio(chime7);
-    //     return sound
-    // }, [])
+    const say = (number:number)=>{
+        let callVoice
+        if(language === 'Amh' || number === 39){
+            const prop = ('callVoice' + number )as (keyof typeof AmhCallVoices)
+            callVoice = AmhCallVoices[prop]
+        }else{
+            const prop = ('callVoice' + number )as (keyof typeof TigCallVoices)
+            callVoice = TigCallVoices[prop]
+        }
+        const voice = new Audio(callVoice)
+        voice.play()
+    }
+    const chimeSound = useMemo(()=>{
+        const sound = new Audio(chime7);
+        return sound
+    }, [])
 
     const pickNumber =async ()=>{
         const randomNumber = randomNumbersRef.current[gameProgress.current]
@@ -149,11 +149,11 @@ function Game() {
             await addGameScore(id as string, randomNumber)
             setDisplayBallStateHandler(randomNumber)
             dispatch(addCall(randomNumber))
-            // chimeSound.play()
+            chimeSound.play()
             
-            // setTimeout(()=>{
-            //     say(randomNumber)
-            // }, 500)
+            setTimeout(()=>{
+                say(randomNumber)
+            }, 500)
         } catch (error) {
             //console.log('error trying to update the game', error)
         }
