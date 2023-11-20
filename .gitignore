@@ -10,6 +10,7 @@ lerna-debug.log*
 # src/assets/voices1
 # src/assets/chimes
 # src/assets/fonts1
+todo.md
 node_modules
 dist
 dist-ssr
