@@ -1,16 +1,17 @@
 import axios from "axios";
 import { Value } from "../store/admin/adminSlice";
-const ADDRESS = 'http://bingoapp.eu-4.evennode.com/api/v1'
-// const ADDRESS = 'http://10.14.29.247:4000/api/v1'
+const ADDRESS = 'http://206.189.182.126:5000/api/v1'
+// const ADDRESS = 'http://10.14.30.153:5000/api/v1'
+// const ADDRESS = 'http://da-bingo.eu-4.evennode.com/'
 
 export const loginUser = (name: string, password: string) => {
         return axios.post(ADDRESS + '/users/login', { name, password })
 }
-const config = {
-        headers: {
-                Authorization: 'Bearer ' + localStorage.getItem('access-token')
-        },
-}
+// const config = {
+//         headers: {
+//                 Authorization: 'Bearer ' + localStorage.getItem('access-token')
+//         },
+// }
 export const createGame = (players: number[], percentage: number, betAmount: number, winAmount: number, profit: number, pattern: string) => {
         const payload = {
                 players: players,
@@ -39,6 +40,11 @@ export const getGame = (id: string) => {
 }
 
 export const addGameScore = (id: string, score: number) => {
+        const config = {
+                headers: {
+                        Authorization: 'Bearer ' + localStorage.getItem('access-token')
+                },
+        }
         return axios.put(ADDRESS + '/games/score/' + id, { scores: score }, config)
 }
 

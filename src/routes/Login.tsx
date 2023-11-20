@@ -11,6 +11,11 @@ function Login() {
     const navigate = useNavigate()
     const loginHandler = async (e:FormEvent)=>{
         e.preventDefault()
+        // <audio src="http://api.soundcloud.com/tracks/148976759/stream?client_id=201b55a1a16e7c0a122d112590b32e4a" preload="auto"></audio>
+        // const audioElement = document.createElement('audio')
+        // audioElement.setAttribute('src', 'http://api.soundcloud.com/tracks/148976759/stream?client_id=201b55a1a16e7c0a122d112590b32e4a')
+        // audioElement.setAttribute('preload', 'auto')
+        // audioElement.play()
         if(userName && password){
             try{
                 const response = await loginUser(userName, password)

@@ -155,6 +155,7 @@ function Game() {
                 say(randomNumber)
             }, 500)
         } catch (error) {
+            clearInterval(gamePlayInterval)
             //console.log('error trying to update the game', error)
         }
         // setDisplayBallStateHandler(randomNumber)

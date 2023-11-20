@@ -27,6 +27,7 @@ function App() {
   const authToken = useSelector(selectToken)
   const isUserAdmin = useSelector(selectIsUserAdmin)
   const isUserSuperAdmin = useSelector(selectIsUserSuperAdmin)
+
   return (
       <Suspense>
         { (!pathname.startsWith('/game/')) && <Navigation></Navigation>}
@@ -43,7 +44,7 @@ function App() {
           <Route path={`/game/:id`} element={<Game/>}></Route>
         </Routes> :
         <Routes>
-          <Route path='*' element={<Game/>}></Route>
+          <Route path='*' element={<Login/>}></Route>
         </Routes>
         }
         
