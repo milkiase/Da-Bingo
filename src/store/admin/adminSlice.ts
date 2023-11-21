@@ -34,6 +34,7 @@ export type Value = ValuePiece | [ValuePiece, ValuePiece];
 type AdminStateType = {
     cashiers: CashierType[],
     dateRange: Value,
+    selectedRange: string,
     games: GameType[],
     houses: HouseType[]
 }
@@ -41,6 +42,7 @@ type AdminStateType = {
 const initialAdminState: AdminStateType = {
     cashiers: [],
     dateRange: [new Date(), new Date()],
+    selectedRange: 'Today',
     games: [],
     houses: []
 }
@@ -64,6 +66,9 @@ const adminSlice = createSlice({
         setDateRange(state, action: PayloadAction<Value>) {
             state.dateRange = action.payload
         },
+        setSelectedRange(state, action: PayloadAction<string>) {
+            state.selectedRange = action.payload
+        },
         setGames(state, action: PayloadAction<GameType[]>) {
             state.games = action.payload
         },
@@ -84,6 +89,6 @@ const adminSlice = createSlice({
     }
 })
 
-export const { setCashiers, addCashier, removeCashier, setDateRange, setGames, setHouses, addHouse, removeHouse, setHouseActiveState } = adminSlice.actions
+export const { setCashiers, addCashier, removeCashier, setDateRange, setSelectedRange, setGames, setHouses, addHouse, removeHouse, setHouseActiveState } = adminSlice.actions
 const adminReducer = adminSlice.reducer
 export default adminReducer

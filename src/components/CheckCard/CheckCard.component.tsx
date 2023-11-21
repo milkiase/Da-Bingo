@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo, FormEvent, ChangeEvent, useRef} from 'react';
 import { useSelector } from 'react-redux';
-import { selectCalls, selectPlayers } from '../../store/game/gameSelectors';
+import { selectCalls, selectPlayers, selectCurrentGameID } from '../../store/game/gameSelectors';
 import Confetti from 'react-confetti';
 
 import TOTAL_CARDS from '../../cards';
 import Pattern from '../Pattern/Pattern.component';
 import './CheckCard.styles.scss';
 import { getPresetPatterns } from '../../utils/game.utils';
-// import { setGameIsWon } from '../../utils/backend.utils';
+import { setGameIsWon } from '../../utils/backend.utils';
 
 const initialPattern = getPresetPatterns().pattern
 
@@ -22,7 +22,7 @@ function CheckCard({onGameOver}:CheckCardProps) {
     const [checkedCard, setCheckedCard] = useState([] as (number | string)[][])
     const [isChecked, setIsChecked] = useState(false)
     const [hasWon, setHasWon] = useState(false)
-    // const gameID = useSelector(selectCurrentGameID)
+    const gameID = useSelector(selectCurrentGameID)
     const bingoWinRef = useRef<HTMLDialogElement | null>(null)
 
     const checkCardHandler = (e:FormEvent<HTMLFormElement>)=>{
@@ -63,11 +63,11 @@ function CheckCard({onGameOver}:CheckCardProps) {
     }, [hasWon])
     const setHasWonHandler = async()=>{
         try {
+            const response = await setGameIsWon(gameID, cardNumber)
             setHasWon(true)
-            // const response = await setGameIsWon(gameID, cardNumber)
-            //console.log('game won successfully.', response.data)
+            console.log('game won successfully.', response.data)
         } catch (error) {
-            //console.log('failed to set game as won.')
+            console.log('failed to set game as won.')
         }
     }
     const canCheckNumber = useMemo(()=>{

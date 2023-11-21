@@ -1,9 +1,9 @@
-import {useState,   useEffect} from 'react';
+import {useState, useEffect} from 'react';
 import Badge from '../../../components/Badge';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { Value, setDateRange } from '../../../store/admin/adminSlice';
-import { selectDateRange } from '../../../store/admin/adminSelectors';
+import { GameType, Value, setDateRange, setSelectedRange} from '../../../store/admin/adminSlice';
+import { selectDateRange, selectSelectedRange } from '../../../store/admin/adminSelectors';
 
 // import 'react-date-range/dist/styles.css'; // main css file
 // import 'react-date-range/dist/theme/default.css'; // theme css file
@@ -16,7 +16,7 @@ import Dropdown from '../../../components/Dropdown';
 // import AreaChart from '../../../components/AreaChart';
 // import VerticalBarChart from '../../../components/VerticalBarChart';
 // import { PieChart } from '../../../components/PieChart';
-import { numberWithCommas } from '../../../utils/game.utils';
+import { getEarning, numberWithCommas } from '../../../utils/game.utils';
 import { selectIsUserAdmin, selectIsUserSuperAdmin } from '../../../store/auth/authSelectors';
 
 const dateRangeOptions = ['Today', 'Yesterday', 'This Week', 'This Month', 'This Year', 'Custom']
@@ -26,24 +26,33 @@ const dateRangeOptions = ['Today', 'Yesterday', 'This Week', 'This Month', 'This
 // const defualtLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July']
 // const defualtDatas = [200, 203, 188, 190, 230, 280, 270]
 
+const calculateEarnings = (games: GameType[])=>{
+    let newEarnings = 0
+    const filteredGames = games.filter(game => game.isWon)
+    for(let i = 0; i<filteredGames.length; i++){
+        newEarnings += getEarning(filteredGames[i])
+    }
+    // console.log('calculating earnings', earnings)
+    return newEarnings
+}
 function Dashboard() {
-    const [seletedRange, setSelectedRange] = useState('Today')
+    // const [selectedRange, setSelectedRange] = useState('Today')
     const dispatch = useDispatch()
     const dateRange = useSelector(selectDateRange)
+    const selectedRange = useSelector(selectSelectedRange)
     const [earnings, setEarnings] = useState(0)
     const [games, setGames] = useState(0)
     const [cashiers, setCashiers] = useState(0)
     const isUserAdmin = useSelector(selectIsUserAdmin)
     const isUserSuperAdmin = useSelector(selectIsUserSuperAdmin)
 
-    const getAnalytics = async ()=>{
+    const getAnalytics = async (inputDateRange: Value )=>{
         try {
-            const response = await fetchCustomAnalytics(dateRange)
-            //console.log('analytics fetched successfully,', response.data)
-            setEarnings(response.data.house.length)
-            setGames(response.data.game)
+            const response = await fetchCustomAnalytics(inputDateRange)
+            // console.log('analytics fetched successfully,', response.data)
+            setEarnings(calculateEarnings(response.data.game.filter((game: GameType) => game.isWon)))
+            setGames(response.data.game.length)
             setCashiers(response.data.user)
-
             
         } catch (error) {
             //console.log('error, trying to fetch analytics', error)
@@ -51,10 +60,12 @@ function Dashboard() {
     }
 
     useEffect(()=>{
-        if(seletedRange !== 'Custom'){
+        if(selectedRange !== 'Custom'){
             const fromDate = new Date()
+            fromDate.setUTCHours(0, 0, 0, 0);
             const toDate = new Date()
-            switch (seletedRange) {
+            toDate.setUTCHours(23, 59, 59, 999);
+            switch (selectedRange) {
                 case 'Yesterday':
                     fromDate.setDate(fromDate.getDate() - 1)
                     toDate.setDate(toDate.getDate() - 1)
@@ -72,18 +83,23 @@ function Dashboard() {
                     break;
             }
             dispatch(setDateRange([fromDate, toDate]))
-            getAnalytics()
+            // getAnalytics([fromDate, toDate])
         }
-    }, [seletedRange])
+    }, [selectedRange])
 
     useEffect(()=>{
-        getAnalytics()
+        getAnalytics(dateRange)
     }, [])
+
+    useEffect(()=>{
+        if(selectedRange !== 'Custom') getAnalytics(dateRange)
+    }, [dateRange])
+
     const changeDateRange = (newDateRange:Value)=>{
         dispatch(setDateRange(newDateRange))
     }
     const fetchAnalytics = ()=>{
-        getAnalytics()
+        getAnalytics(dateRange)
     }
     return (
         <div className=''>
@@ -95,14 +111,14 @@ function Dashboard() {
                 {isUserSuperAdmin && <Badge title='Houses' quantity={cashiers} color='#36B9CC' ></Badge>}
             </div>
             <div className="flex justify-end align-middle gap-2 mr-4 mt-6">
-                {seletedRange === 'Custom' && 
+                {selectedRange === 'Custom' && 
                     <div className='flex self-center'>
                         <button className='btn rounded-sm min-h-6 h-8' onClick={fetchAnalytics}>Fetch</button>
                         <span className=" self-center justify-self-center bg-slate-800">
                             <DateRangePickerComponent value={dateRange} onChange={changeDateRange}/>
                         </span>
                     </div>}
-                {(isUserAdmin || isUserSuperAdmin) && <Dropdown title={seletedRange} values={dateRangeOptions} onItemSelect={setSelectedRange}></Dropdown>}
+                {(isUserAdmin || isUserSuperAdmin) && <Dropdown title={selectedRange} values={dateRangeOptions} onItemSelect={(range)=>{dispatch(setSelectedRange(range))}}></Dropdown>}
             </div>
             {/* <div className='flex max-lg:flex-wrap gap-5 w-full h-[50vh] '>
                 <div className=' h-full w-1/2'>

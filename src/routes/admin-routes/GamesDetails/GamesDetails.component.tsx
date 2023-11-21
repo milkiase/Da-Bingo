@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { numberWithCommas } from '../../../utils/game.utils'
+import { getEarning, numberWithCommas } from '../../../utils/game.utils'
 import { fetchGames } from '../../../utils/backend.utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { setGames } from '../../../store/admin/adminSlice';
@@ -15,7 +15,7 @@ function GamesDetails() {
         const getGames = async ()=>{
             try {
                 const response = await fetchGames()
-                // //console.log(response.data)
+                console.log(response.data)
                 dispatch(setGames(response.data))
             } catch (error) {
                 //console.log('Error, trying to fetch games details.', error)
@@ -52,7 +52,7 @@ function GamesDetails() {
                                     <td>{game.percentage}</td>
                                     <td>{game.isWon ? 'Yes': 'NO'}</td>
                                     <td>{numberWithCommas(game.winamount)}</td>
-                                    <td>{numberWithCommas(game.players.length * game.amount - game.winamount)}</td>
+                                    <td>{numberWithCommas(getEarning(game))}</td>
                                 </tr>
                             )
                             }) 
@@ -62,7 +62,7 @@ function GamesDetails() {
                 </div>
                 <div className='flex flex-grow  justify-around align-middle'>
                     <h1 className='text-[28px] leading-[34px] font-normal self-center text-[#8d90a0] cursor-pointer'>Total Games: {gamesDetails.length}</h1>
-                    <h1 className='text-[28px] leading-[34px] font-normal self-center text-[#8d90a0] cursor-pointer'>Total Earnings: {numberWithCommas(20000)}</h1>
+                    {/* <h1 className='text-[28px] leading-[34px] font-normal self-center text-[#8d90a0] cursor-pointer'>Total Earnings: {numberWithCommas(20000)}</h1> */}
                     
                 </div>
             </div>

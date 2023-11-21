@@ -1,3 +1,5 @@
+import { GameType } from "../store/admin/adminSlice";
+
 export function numberWithCommas(x: number) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -341,4 +343,8 @@ export const getPresetPatterns = (pattern: string = '') => {
         ]
       })
   }
+}
+
+export const getEarning = (game: GameType) => {
+  return game.players.length * game.amount - game.winamount
 }

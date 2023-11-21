@@ -1,8 +1,8 @@
 import axios from "axios";
 import { Value } from "../store/admin/adminSlice";
-const ADDRESS = 'http://206.189.182.126:5000/api/v1'
-// const ADDRESS = 'http://10.14.30.153:5000/api/v1'
-// const ADDRESS = 'http://da-bingo.eu-4.evennode.com/'
+// const ADDRESS = 'http://206.189.182.126:5000/api/v1'
+const ADDRESS = 'http://10.14.30.251:4000/api/v1'
+// const ADDRESS = 'http://da-bingo.eu-4.evennode.com/api/v1'
 
 export const loginUser = (name: string, password: string) => {
         return axios.post(ADDRESS + '/users/login', { name, password })
@@ -41,6 +41,7 @@ export const getGame = (id: string) => {
 
 export const addGameScore = (id: string, score: number) => {
         const config = {
+                timeout: 5000, // Set a timeout of 5 seconds
                 headers: {
                         Authorization: 'Bearer ' + localStorage.getItem('access-token')
                 },

@@ -1,6 +1,6 @@
 import {useState, useEffect, useReducer, useRef, useMemo} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -57,9 +57,10 @@ const btnColor = {
 const initialRandomNumbers = generateRandomNumbers()
 let gamePlayInterval = setInterval(()=>{}, 3000)
 function Game() {
+    const navigate = useNavigate()
     // const setupPattern = useSelector(selectPattern)
     const dispatch = useDispatch()
-    const [language, setLanguage] = useState('Amh')
+    const [language, setLanguage] = useState('Tig')
     const {id} = useParams()
     // const gamePatternType = useSelector(selectGamePattern)
     const gamePattern = useSelector(selectPattern)
@@ -77,7 +78,7 @@ function Game() {
     const resetRef = useRef<HTMLDialogElement | null>(null)
     const [toggleShuffle, setToggleShuffle] = useState(false)
     const [gameState, gameStateDispatcher] = useReducer(gameReducer, {isStarted: false, isPaused: false, isEnded: true})
-    const [autoplaySpeed, setAutoplaySpeed] = useState(9)
+    const [autoplaySpeed, setAutoplaySpeed] = useState(8)
     // const autoplaySpeed = useRef(0)
     const setDisplayBallStateHandler = (number:number)=>{
         const letter = getLetter(number)
@@ -182,6 +183,10 @@ function Game() {
             //console.log('error trying to reset the game' + id, error)
         }
     }
+    const closeGameHandler = ()=> {
+        resetGameHandler()
+        navigate('/')
+    }
     const startGame = ()=>{
         if(gameState?.isEnded){
             randomNumbersRef.current = generateRandomNumbers()
@@ -191,9 +196,10 @@ function Game() {
         }
         gameStateDispatcher({type: GAME_REDUCER_TYPES.started})
         // clearInterval(gamePlayInterval)
+        pickNumber()
         gamePlayInterval = setInterval(()=>{
             pickNumber()
-        },  autoplaySpeed * 1000)
+        },  (15 - autoplaySpeed) * 1000)
     }
     const pauseGame = ()=>{
         clearInterval(gamePlayInterval)
@@ -274,10 +280,10 @@ function Game() {
                         <option value="Tig">Tigrigna</option>
                     </select>
                     <div className=''>
-                        <Slider onChange={sliderChangeHandler} min={3} max={15} disabled={gameState?.isStarted} value={autoplaySpeed}/> Speed
+                        <Slider onChange={sliderChangeHandler} min={0} max={12} disabled={gameState?.isStarted} value={autoplaySpeed}/> Speed
                     </div>
                 </div>
-                {showCheckBoard &&  <CheckCard onGameOver={resetGameHandler}></CheckCard>}
+                {showCheckBoard &&  <CheckCard onGameOver={closeGameHandler}></CheckCard>}
                 <div className='flex flex-col mr-8 '>
                     {/* ----------- Current Ball Display ------------- */}
                     <div className=" -pb-24 game-controls">
@@ -302,7 +308,7 @@ function Game() {
                         <div className="modal-action">
                         <form method="dialog" className='flex justify-end gap-12 pr-4'>
                             {/* if there is a button in form, it will close the modal */}
-                            <button onClick={resetGameHandler} className="btn btn-error w-20">Yes</button>
+                            <button onClick={closeGameHandler} className="btn btn-error w-20">Yes</button>
                             <button className="btn btn-success w-20">Cancel</button>
                         </form>
                         </div>

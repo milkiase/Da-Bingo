@@ -172,7 +172,7 @@ function Cashiers() {
           </div>
         </div>
       </dialog>
-      {deleteDetails.showDeleteDialog && <MessageDialog title='Delete A House' message='Are you sure you want to DELETE the house?' accept={deleteUserHandler} decline={()=>{setDeleteDetails({...deleteDetails, showDeleteDialog: false})}}></MessageDialog>}
+      {deleteDetails.showDeleteDialog && <MessageDialog title='Delete A Cashier' message='Are you sure you want to DELETE the cashier?' accept={deleteUserHandler} decline={()=>{setDeleteDetails({...deleteDetails, showDeleteDialog: false})}}></MessageDialog>}
     </div>
     </div>
   )

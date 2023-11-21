@@ -13,6 +13,7 @@ lerna-debug.log*
 todo.md
 node_modules
 dist
+config
 dist-ssr
 *.local
 
