@@ -7,10 +7,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import { createGame } from '../utils/backend.utils';
 import { selectBetAmount, selectCards, selectPercentage, selectWinAmount, selectPatternType, selectProfit, selectPattern } from '../store/setup/setupSelectors';
 import { changePatternType, resetSetupPage, setGameID, setSetupPattern } from '../store/setup/setupSlice';
+import { selectCurrentGameID } from '../store/game/gameSelectors';
 
 import { PatternTypes, getPresetPatterns, patternTypes } from '../utils/game.utils';
 import Pattern from '../components/Pattern/Pattern.component';
 import MessageDialog from '../components/MessageDialog';
+import { resetGame, setGameBetAmount, setGamePatternType, setGamePercentage, setGameWinAmount, setID, setPlayers } from '../store/game/gameSlice';
 const defaultPattern = getPresetPatterns().pattern
 const pageStatusReducer = (_state: unknown, action: { type: unknown; })=>{
   switch(action.type){
@@ -35,7 +37,10 @@ function Setup() {
   const [pattern, setPattern] = useState(defaultPattern)
   const [patternType, setPatternType] = useState(setupPatternType)
   const [showNewGameDialog, setShowNewGameDialog] = useState(false)
+  const lastGameID = useSelector(selectCurrentGameID)
   const [pageStatus, dispatchPageStatus] = useReducer(pageStatusReducer, {success: true, error: false, loading: false})
+  
+  
   const startGame = async ()=>{
     if(percentage && cards.length && winAmount){
       // navigate('/game/1')
@@ -45,7 +50,14 @@ function Setup() {
         dispatchPageStatus({type: 'success'})
         const id = response.data.id
         dispatch(setGameID(id))
+        dispatch(setID(id))
+        dispatch(resetGame())
+        dispatch(setGameBetAmount(betAmount))
+        dispatch(setGamePatternType(patternType))
+        dispatch(setGameWinAmount(winAmount))
+        dispatch(setGamePercentage(percentage))
         dispatch(resetSetupPage())
+        dispatch(setPlayers(cards))
         navigate('/game/' + id)
       } catch (error) {
         //console.log(error)
@@ -79,7 +91,9 @@ function Setup() {
     setPatternType(setupPatternType)
     setToggle(false)
   }
-
+  const goToLastGame = ()=>{
+    navigate('/game/' + lastGameID)
+  }
   if(pageStatus?.error) return <div className='w-full h-full flex pt-[40vh] justify-center align-middle '>
         <div className='flex text-center'>
             <span className="loading loading-ring loading-lg"></span>
@@ -117,9 +131,14 @@ function Setup() {
             <button className='btn btn-error min-h-6 h-6 rounded-sm mr-8' onClick={()=>{dispatch(resetSetupPage())}}>Reset</button>
             <button className='link' onClick={()=>{setToggle(true)}}>change pattern</button>
           </div>
+          <div>
           <button onClick={()=>{setShowNewGameDialog(true)}} type='button' className='btn bg-green-500 hover:bg-green-600 rounded text-white px-8 h-10 min-h-8'>
             Create Game 
           </button>
+          {lastGameID &&<button className='link link-info ml-4' onClick={goToLastGame}>
+            resume last game
+          </button>}
+          </div>
           {
             showNewGameDialog && <MessageDialog title='Create A New Game' message='Are you sure you want to start a new game?' accept={startGame} decline={()=>{setShowNewGameDialog(false)}}></MessageDialog>
           }

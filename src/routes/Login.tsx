@@ -11,11 +11,6 @@ function Login() {
     const navigate = useNavigate()
     const loginHandler = async (e:FormEvent)=>{
         e.preventDefault()
-        // <audio src="http://api.soundcloud.com/tracks/148976759/stream?client_id=201b55a1a16e7c0a122d112590b32e4a" preload="auto"></audio>
-        // const audioElement = document.createElement('audio')
-        // audioElement.setAttribute('src', 'http://api.soundcloud.com/tracks/148976759/stream?client_id=201b55a1a16e7c0a122d112590b32e4a')
-        // audioElement.setAttribute('preload', 'auto')
-        // audioElement.play()
         if(userName && password){
             try{
                 const response = await loginUser(userName, password)
@@ -34,12 +29,12 @@ function Login() {
         }
     }
     return (
-    <form className="flex flex-col  space-y-4 w-1/2 mx-auto mt-24 p-5 text-white bg-green-500" onSubmit={loginHandler}>
+    <form className="flex flex-col  space-y-4 w-1/2 mx-auto mt-24 p-5 text-white bg-slate-700" onSubmit={loginHandler}>
                 <div>
                     <label className="label">
                         <span className="text-white label-text">Username</span>
                     </label>
-                    <input type="text" placeholder="Enter Username" className="w-full input input-bordered" 
+                    <input type="text" placeholder="Enter Username" className="w-full input input-bordered bg-slate-800" 
                         onChange={(e)=>{setUserName(e.target.value)}}/>
                 </div>
                 <div>
@@ -47,11 +42,11 @@ function Login() {
                         <span className="text-white label-text">Password</span>
                     </label>
                     <input type="password" placeholder="Enter Password"
-                        className="w-full input input-bordered" 
+                        className="w-full input input-bordered bg-slate-800" 
                         onChange={(e)=>{setPassword(e.target.value)}} />
                 </div>
                 <div>
-                    <button className="btn btn-block bg-green-200 hover:bg-green-300 text-black">LogIn</button>
+                    <button className="btn btn-block bg-green-500 hover:bg-green-600 text-black">LogIn</button>
                 </div>
                 {/* <span>Already have an account ?
                     <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">Login</a></span> */}

@@ -12,10 +12,13 @@
     --digital-font: "Digital", "Roboto Condensed", "Helvetica", cursive;
     --release-color: #5cb3ee;
     --bugfix-color: #ff8b9f;
+    --derash-font: "Noto Serif Ethiopic"
 }
 
 body {
     box-sizing: border-box !important;
+    background-color: #1d232a;
+    height: 100vh;
 }
 
 span.border-2 {
@@ -30,6 +33,13 @@ a.btn{
 }
 .welcome{
     font-family: var(--body-font) !important;
+}
+#derash{
+    font-family: var(--derash-font);
+}
+#logo{
+    font-size: x-large;
+    font-weight: bold;
 }
 /* Animations */
 @keyframes blink {
@@ -55,3 +65,9 @@ a.btn{
         bottom: 2rem;
     }
 }
+
+// @media print {
+//     html, body {
+//         height: 100%;    
+//     }
+// }

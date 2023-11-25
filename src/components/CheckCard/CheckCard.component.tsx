@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, FormEvent, ChangeEvent, useRef} from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCalls, selectPlayers, selectCurrentGameID } from '../../store/game/gameSelectors';
+import { removePlayer } from '../../store/game/gameSlice';
 import Confetti from 'react-confetti';
 
 import TOTAL_CARDS from '../../cards';
@@ -12,9 +13,10 @@ import { setGameIsWon } from '../../utils/backend.utils';
 const initialPattern = getPresetPatterns().pattern
 
 type CheckCardProps = {
-    onGameOver: ()=>void
+    onGameOver: (number: number)=>void
 }
 function CheckCard({onGameOver}:CheckCardProps) {
+    const dispatch = useDispatch()
     const callsList = useSelector(selectCalls)
     const players = useSelector(selectPlayers)
     const [cardNumber, setCardNumber] = useState(0)
@@ -24,6 +26,7 @@ function CheckCard({onGameOver}:CheckCardProps) {
     const [hasWon, setHasWon] = useState(false)
     const gameID = useSelector(selectCurrentGameID)
     const bingoWinRef = useRef<HTMLDialogElement | null>(null)
+    const bingoBlockRef = useRef<HTMLDialogElement | null>(null)
 
     const checkCardHandler = (e:FormEvent<HTMLFormElement>)=>{
         e.preventDefault()
@@ -57,18 +60,23 @@ function CheckCard({onGameOver}:CheckCardProps) {
         if(hasWon){
             window.setTimeout(()=>{
                 setHasWon(false)
-                onGameOver()
+                onGameOver(cardNumber)
             }, 20000)
         }
     }, [hasWon])
     const setHasWonHandler = async()=>{
         try {
-            const response = await setGameIsWon(gameID, cardNumber)
+            await setGameIsWon(gameID, cardNumber)
             setHasWon(true)
-            console.log('game won successfully.', response.data)
+            const voice = new Audio('http://localhost/DaBingoApplause.mp3')
+            voice.play()
+            // console.log('game won successfully.', response.data)
         } catch (error) {
-            console.log('failed to set game as won.')
+            // console.log('failed to set game as won.')
         }
+    }
+    const blockPlayer = ()=>{
+        dispatch(removePlayer(cardNumber))
     }
     const canCheckNumber = useMemo(()=>{
         return players.includes(cardNumber)
@@ -78,15 +86,20 @@ function CheckCard({onGameOver}:CheckCardProps) {
             <form onSubmit={checkCardHandler} className='flex gap-6 mt-2'>
                 <input type="number" className=' input rounded-sm w-28' value={cardNumber} onChange={cardNumberChangeHandler} />
                 <button className='btn btn-primary rounded-sm' disabled={!canCheckNumber}>Check</button>
-                {/* <button className='btn btn-primary rounded-sm' >Check</button> */}
             </form>
             <div className='flex  flex-col mx-auto'>
                 <Pattern pattern={pattern} hasHeader={false} checkedCard={checkedCard}/>
-                <button className='btn btn-success h-8 min-h-8 my-2 uppercase text-gray-800 rounded-sm'
-                    onClick={()=>bingoWinRef.current?.showModal()}
-                    disabled={!isChecked}
-                >Bingo</button>
+                <div className='flex justify-between'>
+                    <button className='btn btn-success h-8 min-h-8 my-2 uppercase text-gray-800 rounded-sm'
+                        onClick={()=>bingoWinRef.current?.showModal()}
+                        disabled={!isChecked && !canCheckNumber}
+                    >Bingo</button>
+                    <button className='btn btn-error h-8 min-h-8 my-2 uppercase text-gray-800 rounded-sm' 
+                        onClick={()=>bingoBlockRef.current?.showModal()} disabled={!isChecked && !canCheckNumber}>
+                            Block
+                    </button>
             </div>
+                </div>
             {/* Open the modal using document.getElementById('ID').showModal() method */}
             <dialog id="bingo-win-modal" className="modal pb-24" ref={bingoWinRef}>
             <div className="modal-box ">
@@ -96,7 +109,21 @@ function CheckCard({onGameOver}:CheckCardProps) {
                 <div className="modal-action">
                 <form method="dialog" className='flex justify-end gap-12 pr-4'>
                     {/* if there is a button in form, it will close the modal */}
-                    <button onClick={setHasWonHandler} className="btn btn-error w-20">Yes</button>
+                    <button onClick={setHasWonHandler} className="btn btn-success w-20">Yes</button>
+                    <button className="btn btn-error w-20">NO</button>
+                </form>
+                </div>
+            </div>
+            </dialog>
+
+            <dialog id="bingo-win-modal" className="modal pb-24" ref={bingoBlockRef}>
+            <div className="modal-box ">
+                <h3 className="font-bold text-lg">Confirm !!</h3>
+                <p className="pt-4 pb-2">Are you sure you want to BLOCK the player? </p>
+                <div className="modal-action">
+                <form method="dialog" className='flex justify-end gap-12 pr-4'>
+                    {/* if there is a button in form, it will close the modal */}
+                    <button onClick={blockPlayer} className="btn btn-error w-20">Yes</button>
                     <button className="btn btn-success w-20">NO</button>
                 </form>
                 </div>

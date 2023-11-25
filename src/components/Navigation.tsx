@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectToken, selectUserInfo} from '../store/auth/authSelectors';
 import { logOut } from '../store/auth/authSlice';
 import { resetSetupPage } from '../store/setup/setupSlice';
+import { resetAdminState } from '../store/admin/adminSlice';
 
 function Navigation() {
     const dispatch = useDispatch()
@@ -14,16 +15,17 @@ function Navigation() {
     const handleLogout = ()=>{
         dispatch(logOut())
         dispatch(resetSetupPage())
+        dispatch(resetAdminState())
         navigate('/login')
     }
     return (
         <>
             <div className="navbar bg-slate-800 min-h-12 h-[10vh]">
             <div className="navbar-start">
-            <Link  to={'/'} className="btn btn-ghost normal-case text-2xl">DaBingo</Link>
+            <Link  to={'/'} className="btn btn-ghost normal-case" id='logo'>Lucky Bingo</Link>
             
             </div>
-            <div className="navbar-center hidden lg:flex">
+            <div className="navbar-center flex">
             {   authToken && 
                 <ul className="menu menu-horizontal px-1">
                     <li><Link className={'mx-1' + (location.pathname === '/' && ' active')} to={'/'}>Setup</Link></li>

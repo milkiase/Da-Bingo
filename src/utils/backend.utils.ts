@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Value } from "../store/admin/adminSlice";
-// const ADDRESS = 'http://206.189.182.126:5000/api/v1'
-const ADDRESS = 'http://10.14.30.251:4000/api/v1'
+const ADDRESS = 'http://206.189.182.126:5000/api/v1'
+// const ADDRESS = 'http://10.14.29.208:4000/api/v1'
 // const ADDRESS = 'http://da-bingo.eu-4.evennode.com/api/v1'
 
 export const loginUser = (name: string, password: string) => {

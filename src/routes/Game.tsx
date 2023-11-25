@@ -5,11 +5,12 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 
-import { addCall, resetGame, setCalls, setGameBetAmount, setGamePatternType, setGamePercentage, setGameWinAmount, setID, setIsWon, setPlayers} from '../store/game/gameSlice';
-import { selectCalls } from '../store/game/gameSelectors';
+import { addCall, resetGame} from '../store/game/gameSlice';
+import { selectCalls, selectGameWinAmount } from '../store/game/gameSelectors';
 import { chime7} from '../assets/chimes';
-import AmhCallVoices from '../assets/voices/Amh';
-import TigCallVoices from '../assets/voices/Tig';
+
+// import AmhCallVoices from '../assets/voices/Amh';
+// import TigCallVoices from '../assets/voices/Tig';
 
 
 import { generateRandomNumbers, getColor, getLast5Calls, getLetter, TLastCall} from '../utils/game.utils';
@@ -17,9 +18,11 @@ import { generateRandomNumbers, getColor, getLast5Calls, getLetter, TLastCall} f
 import Pattern from '../components/Pattern/Pattern.component';
 import BingoBoard from '../components/BingoBoard/BingoBoard.component';
 import BallDisplay from '../components/BallDisplay/BallDisplay.component';
-import { addGameScore, getGame, resetGameScores } from '../utils/backend.utils';
+import { resetGameScores, setGameIsWon } from '../utils/backend.utils';
 import CheckCard from '../components/CheckCard/CheckCard.component';
-import { selectPattern } from '../store/setup/setupSelectors';
+import { selectGameID, selectPattern } from '../store/setup/setupSelectors';
+import WinAmount from '../components/WinAmount';
+import axios from 'axios';
 // import { selectPattern } from '../store/setup/setupSelectors';
 
 
@@ -62,13 +65,16 @@ function Game() {
     const dispatch = useDispatch()
     const [language, setLanguage] = useState('Tig')
     const {id} = useParams()
+    const lastGameID = useSelector(selectGameID)
     // const gamePatternType = useSelector(selectGamePattern)
     const gamePattern = useSelector(selectPattern)
+    const winAmount = useSelector(selectGameWinAmount)
     // const [gamePattern, setGamePattern] = useState(intialPattern)
     // useEffect(()=>{
     //     // setGamePattern(getPresetPatterns(gamePatternType).pattern)
     //     setGamePattern(JSON.parse(localStorage.getItem('pattern') as string))
     // },[gamePatternType])
+    const [isAudioLoaded, setIsAudioLoaded] = useState(false)
     const [pageError, setPageError] = useState({loading: true, error: false})
     const callsList = useSelector(selectCalls)
     const [displayBallState, setDisplayBallState] = useState(INITIAL_BALL_STATE)
@@ -77,6 +83,7 @@ function Game() {
     const gameProgress = useRef(0)
     const resetRef = useRef<HTMLDialogElement | null>(null)
     const [toggleShuffle, setToggleShuffle] = useState(false)
+    const [pageLoaded, setPageLoaded] = useState(false)
     const [gameState, gameStateDispatcher] = useReducer(gameReducer, {isStarted: false, isPaused: false, isEnded: true})
     const [autoplaySpeed, setAutoplaySpeed] = useState(8)
     // const autoplaySpeed = useRef(0)
@@ -90,54 +97,69 @@ function Game() {
     }, [callsList])
 
     useEffect(()=>{
-        const fetchGame = async (gameId:string)=>{
+        const testLocalServer = async()=>{
             try {
-                const response = await getGame(gameId)
+                await axios.get('http://localhost/Amh%20B_Track%20(1).mp3')
+                setIsAudioLoaded(true)
+            } catch (error) {
+                setIsAudioLoaded(false)
+            }
+        }
+        testLocalServer()
+        const fetchGame = (gameId: string)=>{
+            try {
+                // const response = await getGame(gameId)
                 //console.log(response.data)
-                const {players, scores, isWon, _id, amount, pattern, winamount, percentage} = response.data
+                // const {players, scores, isWon, _id, amount, pattern, winamount, percentage} = response.data
                 //console.log({players, scores, isWon, _id, amount, pattern, winamount, percentage})
                 //console.log(response)
-                dispatch(setPlayers(players as number[]) )
-                dispatch(setCalls(scores))
-                setDisplayBallStateHandler(scores[scores.length - 1] || 0)
-                setLast5Calls(getLast5Calls(scores) as TLastCall[])
-                dispatch(setIsWon(isWon))
-                dispatch(setID(_id))
-                dispatch(setGameBetAmount(amount))
-                dispatch(setGamePatternType(pattern))
-                dispatch(setGameWinAmount(winamount))
-                dispatch(setGamePercentage(percentage))
-                const length:number = scores.length as number
+                // dispatch(setPlayers(players as number[]) )
+                // dispatch(setCalls(scores))
+                // setLast5Calls(getLast5Calls(scores) as TLastCall[])
+                // dispatch(setIsWon(isWon))
+                // dispatch(setID(_id))
+                // dispatch(setGameBetAmount(amount))
+                // dispatch(setGamePatternType(pattern))
+                // dispatch(setGameWinAmount(winamount))
+                // dispatch(setGamePercentage(percentage))
+                // const length:number = scores.length as number
+                const length = callsList.length
+                setDisplayBallStateHandler(callsList[length - 1] || 0)
                 gameProgress.current = length
                 if(0 < length && length < 74) gameStateDispatcher({type: GAME_REDUCER_TYPES.paused}) 
                 else gameStateDispatcher({type: GAME_REDUCER_TYPES.ended})
                 // randomNumbersRef.current = []
-                for(let i = 0; i < scores.length; i++){
-                    const randomIndex = randomNumbersRef.current.indexOf(scores[i])
+                for(let i = 0; i < length; i++){
+                    const randomIndex = randomNumbersRef.current.indexOf(callsList[i])
                     if(randomIndex !== i) {
                         [randomNumbersRef.current[i], randomNumbersRef.current[randomIndex]] = [randomNumbersRef.current[randomIndex], randomNumbersRef.current[i]]
                     }
                 }
+                clearInterval(gamePlayInterval)
+                if(gameId !== lastGameID) return setPageError({loading: false, error: true})
                 setPageError({loading: false, error: false})
             } catch (error) {
                 //console.log(error)
                 setPageError({loading: false, error: true})
             }
         }
-        fetchGame((id as string))
+        fetchGame(id as string)
     }, [])
 
     const say = (number:number)=>{
-        let callVoice
-        if(language === 'Amh' || number === 39){
-            const prop = ('callVoice' + number )as (keyof typeof AmhCallVoices)
-            callVoice = AmhCallVoices[prop]
-        }else{
-            const prop = ('callVoice' + number )as (keyof typeof TigCallVoices)
-            callVoice = TigCallVoices[prop]
-        }
-        const voice = new Audio(callVoice)
+        // let callVoice
+        const callLanguage = (number === 30 || number === 39) ? 'Amh' : language
+        const audioURL = 'http://localhost/'+ callLanguage +'%20'+getLetter(number)+'_Track%20(' + number +').mp3'
+        // if(language === 'Amh' || number === 39){
+        //     const prop = ('callVoice' + number )as (keyof typeof AmhCallVoices)
+        //     callVoice = AmhCallVoices[prop]
+        // }else{
+        //     const prop = ('callVoice' + number )as (keyof typeof TigCallVoices)
+        //     callVoice = TigCallVoices[prop]
+        // }
+        const voice = new Audio(audioURL)
         voice.play()
+        
     }
     const chimeSound = useMemo(()=>{
         const sound = new Audio(chime7);
@@ -147,7 +169,7 @@ function Game() {
     const pickNumber =async ()=>{
         const randomNumber = randomNumbersRef.current[gameProgress.current]
         try {
-            await addGameScore(id as string, randomNumber)
+            // await addGameScore(id as string, randomNumber)
             setDisplayBallStateHandler(randomNumber)
             dispatch(addCall(randomNumber))
             chimeSound.play()
@@ -187,20 +209,43 @@ function Game() {
         resetGameHandler()
         navigate('/')
     }
+
+    const gameOverHandler = async (winnerNumber: number)=>{
+        try {
+            await setGameIsWon(lastGameID, winnerNumber)
+            closeGameHandler()
+        } catch (error) {
+            // console.log('failed trying to end the game.')
+        }
+    }
     const startGame = ()=>{
         if(gameState?.isEnded){
             randomNumbersRef.current = generateRandomNumbers()
-            resetGameHandler()
-            gameProgress.current = 0
-            // shuffleSound.play()
+            if(gameProgress.current >= 74){
+                resetGameHandler()
+                gameProgress.current = 0
+            }
         }
         gameStateDispatcher({type: GAME_REDUCER_TYPES.started})
         // clearInterval(gamePlayInterval)
-        pickNumber()
+        setTimeout(()=>{
+            pickNumber()
+        }, 2000)
+
         gamePlayInterval = setInterval(()=>{
             pickNumber()
         },  (15 - autoplaySpeed) * 1000)
     }
+
+    useEffect(()=>{
+        if(pageLoaded){
+            const shuffleSound = new Audio('http://localhost/shuffle.mp3')
+            shuffleSound.play()
+        }else{
+            setPageLoaded(true)
+        }
+    }, [toggleShuffle])
+
     const pauseGame = ()=>{
         clearInterval(gamePlayInterval)
         gameStateDispatcher({type: GAME_REDUCER_TYPES.paused})
@@ -242,6 +287,11 @@ function Game() {
             {pageError.error && <Link to={'/'} className='link self-center ml-4'>Go Back</Link>}
         </div>
     </div>
+    if(!isAudioLoaded){
+        return <div className=' h-full w-full flex justify-center pt-[40vh]'>
+            <p>The local server is not running !!! <button className='link link-error' onClick={()=>{setIsAudioLoaded(true)}}>Continue Anyway</button></p>
+        </div>
+    }
     return (
         <div className='ml-3 overflow-hidden'>
             <div className='flex justify-center'>
@@ -283,7 +333,7 @@ function Game() {
                         <Slider onChange={sliderChangeHandler} min={0} max={12} disabled={gameState?.isStarted} value={autoplaySpeed}/> Speed
                     </div>
                 </div>
-                {showCheckBoard &&  <CheckCard onGameOver={closeGameHandler}></CheckCard>}
+                {showCheckBoard ?  <CheckCard onGameOver={gameOverHandler}></CheckCard> : <WinAmount winAmount={winAmount}/>}
                 <div className='flex flex-col mr-8 '>
                     {/* ----------- Current Ball Display ------------- */}
                     <div className=" -pb-24 game-controls">

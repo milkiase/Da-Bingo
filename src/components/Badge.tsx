@@ -11,7 +11,7 @@ function Badge({title, quantity, color='#4E73DF'}: BadgeProps) {
             style = {{borderColor: color}}>
             <div>
                 <h2 className={`text-[11px] leading-[17px] font-bold text-lg`} style = {{ color: color}}>{title}</h2>
-                <h1 className='text-[20px] leading-[24px] font-bold text-[#5a5c69] text-white mt-[5px]'>{quantity}</h1>
+                <h1 className='text-[20px] leading-[24px] font-bold text-white mt-[5px]'>{quantity}</h1>
             </div>
             {/* <FaRegCalendarMinus fontSize={28} color="" /> */}
 

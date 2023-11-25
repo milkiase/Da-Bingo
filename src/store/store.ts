@@ -12,7 +12,7 @@ import storage from 'redux-persist/lib/storage'
 const persistedReducer = persistReducer({
     key: 'bingo',
     storage,
-    whitelist: ['auth', 'setup']
+    whitelist: ['auth', 'setup', 'game']
 }, rootReducer)
 
 export type RootState = ReturnType<typeof rootReducer>

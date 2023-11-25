@@ -2,11 +2,12 @@ import {memo} from 'react'
 const BINGO = ['B', 'I', 'N', 'G', 'O']
 type CardNumbersProps = {
     i: number,
-    cardArray: (string | number)[][]
+    cardArray: (string | number)[][],
+    className?: string
 }
-const CardNumbers = memo(({cardArray}: CardNumbersProps)=>{
+const CardNumbers = memo(({cardArray, className}: CardNumbersProps)=>{
     return (
-      <div className='flex text-sm text-black mx-auto'>
+    <div className={'flex text-sm text-black mx-auto' + className}>
         {
             cardArray.map((column, index)=>
                 <div className='flex flex-col' key={index}>

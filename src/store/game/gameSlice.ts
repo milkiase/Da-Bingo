@@ -32,7 +32,14 @@ const gameSlice = createSlice({
             state.calls = action.payload
         },
         resetGame(state) {
-            state.calls = []
+            state.calls = [],
+                state.pattern = 'Any Line',
+                state.players = [],
+                state.isWon = false,
+                state.id = '',
+                state.betAmount = 0,
+                state.winAmount = 0,
+                state.percentage = 0
         },
         setGamePatternType(state, action: PayloadAction<string>) {
             state.pattern = action.payload
@@ -54,10 +61,13 @@ const gameSlice = createSlice({
         },
         setGamePercentage(state, action: PayloadAction<number>) {
             state.percentage = action.payload
+        },
+        removePlayer(state, action: PayloadAction<number>) {
+            state.players = state.players.filter(player => player !== action.payload)
         }
     }
 })
 
-export const { addCall, setCalls, resetGame, setGamePatternType, setPlayers, setIsWon, setID, setGameBetAmount, setGameWinAmount, setGamePercentage } = gameSlice.actions;
+export const { addCall, setCalls, resetGame, setGamePatternType, setPlayers, setIsWon, setID, setGameBetAmount, setGameWinAmount, setGamePercentage, removePlayer } = gameSlice.actions;
 const gameReducer = gameSlice.reducer;
 export default gameReducer;

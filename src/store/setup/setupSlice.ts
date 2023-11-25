@@ -9,7 +9,7 @@ type SetupState = {
     profit: number,
     patternType: string,
     pattern: boolean[][],
-    gameID: string
+    gameID: string,
 }
 export const INITIAL_STATE: SetupState = {
     cards: [],

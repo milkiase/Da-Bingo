@@ -38,10 +38,14 @@ type AdminStateType = {
     games: GameType[],
     houses: HouseType[]
 }
+const fromDate = new Date()
+fromDate.setUTCHours(0, 0, 0, 0);
+const toDate = new Date()
+toDate.setUTCHours(23, 59, 59, 999);
 
 const initialAdminState: AdminStateType = {
     cashiers: [],
-    dateRange: [new Date(), new Date()],
+    dateRange: [fromDate, toDate],
     selectedRange: 'Today',
     games: [],
     houses: []
@@ -85,10 +89,17 @@ const adminSlice = createSlice({
             state.houses = state.houses.map((house: HouseType) => {
                 return (house._id === action.payload.id ? { ...house, isActive: action.payload.isActive } : house)
             })
+        },
+        resetAdminState(state) {
+            state.cashiers = []
+            state.dateRange = [fromDate, toDate]
+            state.selectedRange = 'Today'
+            state.games = []
+            state.houses = []
         }
     }
 })
 
-export const { setCashiers, addCashier, removeCashier, setDateRange, setSelectedRange, setGames, setHouses, addHouse, removeHouse, setHouseActiveState } = adminSlice.actions
+export const { setCashiers, addCashier, removeCashier, setDateRange, setSelectedRange, setGames, setHouses, addHouse, removeHouse, setHouseActiveState, resetAdminState } = adminSlice.actions
 const adminReducer = adminSlice.reducer
 export default adminReducer

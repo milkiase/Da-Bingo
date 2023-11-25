@@ -24,7 +24,7 @@ const authSlice = createSlice({
             state.token = action.payload
         },
         setUserInfo(state, action: PayloadAction<UserInfo>) {
-            // //console.log(action.payload)
+            //console.log(action.payload)
             state.username = action.payload.username
             state.id = action.payload.id
             state.isAdmin = action.payload.isAdmin

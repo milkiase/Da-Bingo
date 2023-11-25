@@ -21,16 +21,14 @@ import { selectIsUserAdmin, selectIsUserSuperAdmin } from '../../../store/auth/a
 
 const dateRangeOptions = ['Today', 'Yesterday', 'This Week', 'This Month', 'This Year', 'Custom']
 
-
-
 // const defualtLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July']
 // const defualtDatas = [200, 203, 188, 190, 230, 280, 270]
 
 const calculateEarnings = (games: GameType[])=>{
     let newEarnings = 0
-    const filteredGames = games.filter(game => game.isWon)
-    for(let i = 0; i<filteredGames.length; i++){
-        newEarnings += getEarning(filteredGames[i])
+    // const filteredGames = games.filter(game => game.isWon)
+    for(let i = 0; i<games.length; i++){
+        newEarnings += getEarning(games[i])
     }
     // console.log('calculating earnings', earnings)
     return newEarnings
@@ -50,7 +48,7 @@ function Dashboard() {
         try {
             const response = await fetchCustomAnalytics(inputDateRange)
             // console.log('analytics fetched successfully,', response.data)
-            setEarnings(calculateEarnings(response.data.game.filter((game: GameType) => game.isWon)))
+            setEarnings(calculateEarnings(response.data.game))
             setGames(response.data.game.length)
             setCashiers(response.data.user)
             
@@ -60,6 +58,7 @@ function Dashboard() {
     }
 
     useEffect(()=>{
+
         if(selectedRange !== 'Custom'){
             const fromDate = new Date()
             fromDate.setUTCHours(0, 0, 0, 0);
@@ -88,7 +87,15 @@ function Dashboard() {
     }, [selectedRange])
 
     useEffect(()=>{
-        getAnalytics(dateRange)
+        const fromDate = new Date()
+        fromDate.setUTCHours(0, 0, 0, 0);
+        const toDate = new Date()
+        toDate.setUTCHours(23, 59, 59, 999);
+        // toDate.setDate(toDate.getDate()-1)
+        // console.log([fromDate, toDate])
+        // getAnalytics([fromDate, toDate])
+        // if(isUserAdmin || isUserSuperAdmin) getAnalytics([fromDate, toDate])
+        // else getAnalytics([fromDate, toDate])
     }, [])
 
     useEffect(()=>{
@@ -100,6 +107,7 @@ function Dashboard() {
     }
     const fetchAnalytics = ()=>{
         getAnalytics(dateRange)
+        // console.log('fetch')
     }
     return (
         <div className=''>
@@ -110,6 +118,7 @@ function Dashboard() {
                 {isUserAdmin && <Badge title='Cashiers' quantity={cashiers} color='#36B9CC' ></Badge>}
                 {isUserSuperAdmin && <Badge title='Houses' quantity={cashiers} color='#36B9CC' ></Badge>}
             </div>
+            {(isUserAdmin || isUserSuperAdmin) && 
             <div className="flex justify-end align-middle gap-2 mr-4 mt-6">
                 {selectedRange === 'Custom' && 
                     <div className='flex self-center'>
@@ -118,8 +127,8 @@ function Dashboard() {
                             <DateRangePickerComponent value={dateRange} onChange={changeDateRange}/>
                         </span>
                     </div>}
-                {(isUserAdmin || isUserSuperAdmin) && <Dropdown title={selectedRange} values={dateRangeOptions} onItemSelect={(range)=>{dispatch(setSelectedRange(range))}}></Dropdown>}
-            </div>
+                <Dropdown title={selectedRange} values={dateRangeOptions} onItemSelect={(range)=>{dispatch(setSelectedRange(range))}}></Dropdown>
+            </div>}
             {/* <div className='flex max-lg:flex-wrap gap-5 w-full h-[50vh] '>
                 <div className=' h-full w-1/2'>
                     <AreaChart labels={defualtLabels} values={defualtDatas}></AreaChart>
