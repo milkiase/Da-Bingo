@@ -66,8 +66,10 @@ a.btn{
     }
 }
 
-// @media print {
-//     html, body {
-//         height: 100%;    
-//     }
-// }
+@media print {
+    body {
+        // background-color: white;
+        height: 100mm !important;    
+        width: 80mm !important;    
+    }
+}

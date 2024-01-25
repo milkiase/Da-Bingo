@@ -4,6 +4,7 @@ import { fetchGames } from '../../../utils/backend.utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { setGames } from '../../../store/admin/adminSlice';
 import { selectGames } from '../../../store/admin/adminSelectors';
+import { toast } from 'react-toastify';
 const arr:number[] = []
 for(let count = 0; count < 100; count++){
     arr.push(count)
@@ -12,13 +13,23 @@ function GamesDetails() {
     const dispatch = useDispatch()
     const gamesDetails = useSelector(selectGames)
     useEffect(()=>{
+        const toastID = toast.loading('fetching games')
         const getGames = async ()=>{
             try {
                 const response = await fetchGames()
-                console.log(response.data)
+                toast.done(toastID)
+                // console.log(response.data)
                 dispatch(setGames(response.data))
             } catch (error) {
                 //console.log('Error, trying to fetch games details.', error)
+                toast.update(toastID, {
+                    render: 'Ooops, Error Has Encountered.',
+                    type: 'error',
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    isLoading: false
+                })
             }
         }
         getGames()
@@ -51,8 +62,8 @@ function GamesDetails() {
                                     <td>{game.amount}</td>
                                     <td>{game.percentage}</td>
                                     <td>{game.isWon ? 'Yes': 'NO'}</td>
-                                    <td>{numberWithCommas(game.winamount)}</td>
-                                    <td>{numberWithCommas(getEarning(game))}</td>
+                                    <td>{numberWithCommas(Number(game.winamount.toFixed(2)))}</td>
+                                    <td>{numberWithCommas(Number(getEarning(game).toFixed(2)))}</td>
                                 </tr>
                             )
                             }) 

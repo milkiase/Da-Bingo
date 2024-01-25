@@ -15,3 +15,7 @@ export const selectIsUserAdmin = (state: RootState) => {
 export const selectIsUserSuperAdmin = (state: RootState) => {
     return state.auth.isSuperAdmin
 }
+
+export const selectHouseName = (state: RootState) => {
+    return state.auth.house
+}

@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import Badge from '../../../components/Badge';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +18,9 @@ import Dropdown from '../../../components/Dropdown';
 // import { PieChart } from '../../../components/PieChart';
 import { getEarning, numberWithCommas } from '../../../utils/game.utils';
 import { selectIsUserAdmin, selectIsUserSuperAdmin } from '../../../store/auth/authSelectors';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const dateRangeOptions = ['Today', 'Yesterday', 'This Week', 'This Month', 'This Year', 'Custom']
 
@@ -43,10 +46,16 @@ function Dashboard() {
     const [cashiers, setCashiers] = useState(0)
     const isUserAdmin = useSelector(selectIsUserAdmin)
     const isUserSuperAdmin = useSelector(selectIsUserSuperAdmin)
-
+    const firstLoad = useRef(true)
     const getAnalytics = async (inputDateRange: Value )=>{
+        if(firstLoad.current) {
+            firstLoad.current = false
+            return
+        }
+        const toastID = toast.loading('fetching...')
         try {
             const response = await fetchCustomAnalytics(inputDateRange)
+            toast.done(toastID)
             // console.log('analytics fetched successfully,', response.data)
             setEarnings(calculateEarnings(response.data.game))
             setGames(response.data.game.length)
@@ -54,6 +63,14 @@ function Dashboard() {
             
         } catch (error) {
             //console.log('error, trying to fetch analytics', error)
+            toast.update(toastID, {
+                render: 'Opps, Error Encountered.',
+                type: 'error',
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                isLoading: false
+            })
         }
     }
 
@@ -113,7 +130,7 @@ function Dashboard() {
         <div className=''>
             
             <div className='flex flex-wrap justify-evenly'>
-                <Badge title='Earnings' quantity={numberWithCommas(earnings) + ' birr'} color='#1CC88A'></Badge>
+                <Badge title='Earnings' quantity={numberWithCommas(Number(earnings.toFixed(2))) + ' birr'} color='#1CC88A'></Badge>
                 <Badge title='Games' quantity={games} color='#4E73DF' ></Badge>
                 {isUserAdmin && <Badge title='Cashiers' quantity={cashiers} color='#36B9CC' ></Badge>}
                 {isUserSuperAdmin && <Badge title='Houses' quantity={cashiers} color='#36B9CC' ></Badge>}
@@ -138,6 +155,7 @@ function Dashboard() {
                     <PieChart/>
                 </div>
             </div> */}
+            <ToastContainer/>
         </div>
     )
 }

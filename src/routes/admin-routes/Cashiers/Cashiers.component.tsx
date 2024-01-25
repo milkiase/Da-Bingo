@@ -8,6 +8,9 @@ import { CashierType, addCashier, removeCashier, setCashiers } from '../../../st
 import { selectCashiers } from '../../../store/admin/adminSelectors'
 import MessageDialog from '../../../components/MessageDialog'
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 type NewUserType = {
   username: string,
   password1: string,
@@ -33,13 +36,23 @@ function Cashiers() {
   const closeBtnRef = useRef<HTMLButtonElement>(null)
   const [deleteDetails, setDeleteDetails] = useState({showDeleteDialog: false, deleteID: '0'})
   useEffect(() => {
+    const toastID = toast.loading('fetching cashiers.')
     const getCashiers = async ()=>{
       try {
         const resopnse = await fetchCashiers()
+        toast.done(toastID)
         dispatch(setCashiers(resopnse.data))
-        // //console.log('cashiers', resopnse)
+        //console.log('cashiers', resopnse)
       } catch (error) {
         //console.log('error, trying to fetch cashiers.',error)
+        toast.update(toastID, {
+        render: 'Ooops, Error has encountered.',
+        type: 'error',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
       }
     }
     getCashiers()
@@ -47,17 +60,32 @@ function Cashiers() {
 
   const submitNewUserHandler = async (e:FormEvent<HTMLFormElement>)=>{
     e.preventDefault()
-    if(!schema.validate(newUser.password1)) return alert('invalid password')
-    if(newUser.password1 !== newUser.password2) return alert('password did\'t match.')
+    if(!schema.validate(newUser.password1)) return toast('Invalid Password', {type: 'error'})
+    if(newUser.password1 !== newUser.password2) return toast('password did\'t match.', {type: 'error'})
+    const toastID = toast.loading('Registering New Cashier')
     if(newUser.username && newUser.password1){
       try {
         const response = await registerUser(newUser.username, newUser.password1, newUser.isAdmin)
-        // //console.log('user created successfuly!', response)
+        toast.update(toastID, {
+          render: 'Cashier Created Successfully.',
+          type: 'success',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          isLoading: false
+        })
         dispatch(addCashier(response.data))
         setNewUser(initialNewUser)
         closeBtnRef.current?.click()
       } catch (error) {
-        //console.log(error)
+        toast.update(toastID, {
+          render: 'Failed to Create a New Cashier.',
+          type: 'error',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          isLoading: false
+        })
       }
     }
   } 
@@ -74,12 +102,27 @@ function Cashiers() {
   }
 
   const deleteUserHandler = async ()=>{
+    const toastID = toast.loading('Deleting a Cashier')
     try {
       await deleteUser(deleteDetails.deleteID)
-      // //console.log('user deleted successfuly!', response)
+      toast.update(toastID, {
+        render: 'Cashier Deleted Successfully.',
+        type: 'success',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
       dispatch(removeCashier(deleteDetails.deleteID))
     } catch (error) {
-      //console.log('error, trying to delete user', error)
+      toast.update(toastID, {
+        render: 'Failed to Delete the cashier.',
+        type: 'error',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
     }
   }
   const deleteUserPrompt = (id: string)=>{
@@ -174,6 +217,7 @@ function Cashiers() {
       </dialog>
       {deleteDetails.showDeleteDialog && <MessageDialog title='Delete A Cashier' message='Are you sure you want to DELETE the cashier?' accept={deleteUserHandler} decline={()=>{setDeleteDetails({...deleteDetails, showDeleteDialog: false})}}></MessageDialog>}
     </div>
+      <ToastContainer/>
     </div>
   )
 }

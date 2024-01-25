@@ -10,7 +10,7 @@ import storage from 'redux-persist/lib/storage'
 // }
 
 const persistedReducer = persistReducer({
-    key: 'bingo',
+    key: 'lucky-bingo',
     storage,
     whitelist: ['auth', 'setup', 'game']
 }, rootReducer)

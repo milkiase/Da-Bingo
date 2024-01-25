@@ -2,7 +2,7 @@ import {useState, useEffect, ChangeEvent, FormEvent} from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectCards, selectBetAmount, selectPercentage, selectWinAmount } from '../store/setup/setupSelectors';
 import {changeBetAmount, changePercentage, changeWinAmount} from '../store/setup/setupSlice';
-import { numberWithCommas } from '../utils/game.utils';
+// import { numberWithCommas } from '../utils/game.utils';
 
 function GamePayAmounts() {
   const dispatch = useDispatch()
@@ -19,9 +19,17 @@ function GamePayAmounts() {
     
     dispatch(changeBetAmount(amount))
   }
+
+  const winAmountChangeHandler = (e:ChangeEvent<HTMLInputElement>)=>{
+    let amount = Number(e.target.value)
+    if(amount < 1) amount = 0
+    
+    dispatch(changeWinAmount(amount))
+  }
+
   const percentageChangeHandler = (e:ChangeEvent<HTMLInputElement>)=>{
     let amount = Number(e.target.value)
-    if(amount < 1) amount = 1
+    if(amount < 1) amount = 0
     else if(amount > 100) amount = 100
     dispatch(changePercentage(amount))
   }
@@ -45,17 +53,23 @@ function GamePayAmounts() {
           </form>
           <div className='flex justify-between gap-9'>
             {showPayAmounts && <div className='flex flex-wrap'>
+              <span className=' mr-16 flex flex-wrap pt-2 text-end'>Tot. Players: <strong className="w-8 h-8 text-end"> {cards.length}</strong></span>
               <span className='m-1 flex flex-wrap'>
                 <label htmlFor="percentage" className='pt-1'>Percentage: </label>
-                <input id='percentage' className="input border-0 rounded-none w-32 h-8 pt-0 bg-opacity-10" type="number" 
+                <input id='percentage' className="input border-0 rounded-none w-32 ml-1 h-8 pt-0 bg-opacity-10" type="number" 
                   onChange={percentageChangeHandler} value={percentage} max={100} min={1}/>
               </span>
               <span className='m-1 flex flex-wrap'>
                 <label htmlFor="bet-amount" className='pt-1'>Bet Amount: </label>
-                <input id='bet-amount' type="number" className="input border-0 rounded-none w-32 h-8 pt-0 bg-opacity-10"
+                <input id='bet-amount' type="number" className="input border-0 rounded-none w-32 ml-1 h-8 pt-0 bg-opacity-10"
                     onChange={betAmountChangeHandler} value={betAmount} min={1}/>
               </span>
-              <span className=' ml-3 flex flex-wrap pt-2 text-end'>Win Amount: <strong className="w-24 h-8 text-end"> {numberWithCommas(winAmount)} ETB</strong></span>
+              {/* <span className=' ml-3 flex flex-wrap pt-2 text-end'>Win Amount: <strong className="w-24 h-8 text-end"> {numberWithCommas(winAmount)} ETB</strong></span> */}
+              <span className='m-1 mr-0 flex flex-wrap'>
+                <label htmlFor="win-amount" className='pt-1'>Win Amount: </label>
+                <input id='win-amount' type="number" className="input border-0 rounded-none w-32 ml-1 h-8 pt-0 bg-opacity-10"
+                    onChange={winAmountChangeHandler} value={winAmount} min={1}/>
+              </span>
             </div>}
             <div className="form-control ">
               <label className="cursor-pointer label">

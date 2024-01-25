@@ -8,7 +8,7 @@ type GameState = {
     id: string,
     betAmount: number,
     winAmount: number,
-    percentage: number
+    percentage: number,
 }
 const INITIAL_GAME_STATE: GameState = {
     calls: [],
@@ -18,7 +18,7 @@ const INITIAL_GAME_STATE: GameState = {
     id: '',
     betAmount: 0,
     winAmount: 0,
-    percentage: 0
+    percentage: 0,
 }
 
 const gameSlice = createSlice({

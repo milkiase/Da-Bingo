@@ -4,6 +4,9 @@ import { useDispatch } from 'react-redux';
 import { setToken, setUserInfo } from '../store/auth/authSlice';
 import { loginUser } from '../utils/backend.utils'
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 function Login() {
     const [userName, setUserName] = useState('')
     const [password, setPassword] = useState('')
@@ -12,24 +15,48 @@ function Login() {
     const loginHandler = async (e:FormEvent)=>{
         e.preventDefault()
         if(userName && password){
+            const id = toast.loading('trying to login')
             try{
                 const response = await loginUser(userName, password)
+                // return console.log('loged in ', response)
+                toast.update(id, {
+                    render: 'Wow, Successfully logged in.',
+                    type: 'success',
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    // pauseOnHover: true,
+                    // draggable: true,
+                    // progress: undefined,
+                    isLoading: false
+                })
                 dispatch(setToken(response.data.token))
                 localStorage.setItem('access-token', response.data.token)
-                const userInfo = {id: response.data.id, isAdmin:response.data.isAdmin, username: response.data.name, isSuperAdmin:response.data.isSuperAdmin}
-                //console.log(userInfo)
-                //console.log(response.data)
+                const userInfo = {id: response.data.id, house: response.data.house, isAdmin:response.data.isAdmin, username: response.data.name, isSuperAdmin:response.data.isSuperAdmin}
                 dispatch(setUserInfo(userInfo))
                 navigate('/')
             }catch(error){
-                //console.log((error as Error).message)
+                toast.update(id, {
+                    render: (error as Error).message,
+                    type: 'error',
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    // pauseOnHover: true,
+                    // draggable: true,
+                    // progress: undefined,
+                    isLoading: false
+                })
             }
         }else{
-            alert('No User Name or Password')
+            toast('No User Name or Password', {
+                type: 'warning'
+            })
         }
     }
     return (
-    <form className="flex flex-col  space-y-4 w-1/2 mx-auto mt-24 p-5 text-white bg-slate-700" onSubmit={loginHandler}>
+    <>
+        <form className="flex flex-col  space-y-4 w-1/2 mx-auto mt-24 p-5 text-white bg-slate-700" onSubmit={loginHandler}>
                 <div>
                     <label className="label">
                         <span className="text-white label-text">Username</span>
@@ -50,7 +77,10 @@ function Login() {
                 </div>
                 {/* <span>Already have an account ?
                     <a href="#" className="text-blue-600 hover:text-blue-800 hover:underline">Login</a></span> */}
-            </form>
+        </form>
+        <ToastContainer/>
+    </>
+
   )
 }
 

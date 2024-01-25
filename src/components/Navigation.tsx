@@ -2,7 +2,7 @@ import {Link, useLocation, useNavigate} from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectToken, selectUserInfo} from '../store/auth/authSelectors';
 import { logOut } from '../store/auth/authSlice';
-import { resetSetupPage } from '../store/setup/setupSlice';
+// import { resetSetupPage } from '../store/setup/setupSlice';
 import { resetAdminState } from '../store/admin/adminSlice';
 
 function Navigation() {
@@ -14,7 +14,7 @@ function Navigation() {
     const location = useLocation()
     const handleLogout = ()=>{
         dispatch(logOut())
-        dispatch(resetSetupPage())
+        // dispatch(resetSetupPage())
         dispatch(resetAdminState())
         navigate('/login')
     }
@@ -22,7 +22,9 @@ function Navigation() {
         <>
             <div className="navbar bg-slate-800 min-h-12 h-[10vh]">
             <div className="navbar-start">
-            <Link  to={'/'} className="btn btn-ghost normal-case" id='logo'>Lucky Bingo</Link>
+                <Link  to={'/'} className="navbar-start btn btn-ghost normal-case w-fit light:bg-slate-800" id='logo'>
+                    <img src='https://i.imgur.com/1B8elZ1.png' alt="Lucky Bingo" className=' h-[9vh]'/>
+                </Link>
             
             </div>
             <div className="navbar-center flex">

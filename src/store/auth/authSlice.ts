@@ -4,16 +4,18 @@ type UserInfo = {
     id: string,
     isAdmin: boolean,
     isSuperAdmin: boolean,
+    house: string
 }
 type AuthState = {
     token: string,
 } & UserInfo
 const INITIAL_STATE: AuthState = {
     token: '',
-    username: '',
     id: '',
+    username: '',
     isAdmin: false,
     isSuperAdmin: false,
+    house: '',
 }
 
 const authSlice = createSlice({
@@ -29,6 +31,7 @@ const authSlice = createSlice({
             state.id = action.payload.id
             state.isAdmin = action.payload.isAdmin
             state.isSuperAdmin = action.payload.isSuperAdmin
+            state.house = action.payload.house
         },
         logOut(state) {
             state.id = ''

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Value } from "../store/admin/adminSlice";
-const ADDRESS = 'http://206.189.182.126:5000/api/v1'
-// const ADDRESS = 'http://10.14.29.208:4000/api/v1'
+const ADDRESS = 'http://206.189.182.126:4000/api/v1'
+// const ADDRESS = 'http://10.14.29.241:4000/api/v1'
 // const ADDRESS = 'http://da-bingo.eu-4.evennode.com/api/v1'
 
 export const loginUser = (name: string, password: string) => {
@@ -12,8 +12,9 @@ export const loginUser = (name: string, password: string) => {
 //                 Authorization: 'Bearer ' + localStorage.getItem('access-token')
 //         },
 // }
-export const createGame = (players: number[], percentage: number, betAmount: number, winAmount: number, profit: number, pattern: string) => {
+export const createGame = (id: string, players: number[], percentage: number, betAmount: number, winAmount: number, profit: number, pattern: string) => {
         const payload = {
+                gameid: id,
                 players: players,
                 amount: betAmount,
                 percentage,
@@ -23,8 +24,9 @@ export const createGame = (players: number[], percentage: number, betAmount: num
                 pattern
         }
         const config = {
+                timeout: 6000,
                 headers: {
-                        Authorization: 'Bearer ' + localStorage.getItem('access-token')
+                        Authorization: 'Bearer ' + localStorage.getItem('access-token'),
                 },
         }
         return axios.post(ADDRESS + '/games', payload, config)
@@ -59,8 +61,9 @@ export const resetGameScores = (id: string) => {
 }
 export const setGameIsWon = (id: string, winner: number) => {
         const config = {
+                timeout: 3000,
                 headers: {
-                        Authorization: 'Bearer ' + localStorage.getItem('access-token')
+                        Authorization: 'Bearer ' + localStorage.getItem('access-token'),
                 },
         }
         return axios.put(ADDRESS + '/games/won/' + id, { winner }, config)

@@ -1,4 +1,4 @@
-import {useState, FormEvent, ChangeEvent, useEffect, useRef} from 'react'
+import {useState, FormEvent, ChangeEvent, useEffect, useRef, memo} from 'react'
 
 import PasswordValidator from 'password-validator'
 
@@ -7,6 +7,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { HouseType, addHouse, removeHouse, setHouseActiveState, setHouses } from '../../../store/admin/adminSlice';
 import { selectHouses } from '../../../store/admin/adminSelectors';
 import MessageDialog from '../../../components/MessageDialog';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type NewHouseType = {
   name: string,
@@ -29,7 +32,7 @@ const schema = new PasswordValidator()
 schema.is().min(8)
 schema.has().not().spaces()
 
-function Houses() {
+const Houses = memo(()=>{
   const dispatch = useDispatch()
   const totalHouses = useSelector(selectHouses)
   const [newHouse, setNewHouse] = useState(initialNewHouse)
@@ -39,13 +42,21 @@ function Houses() {
   const [deleteDetails, setDeleteDetails] = useState({showDeleteDialog: false, deleteID: '0'})
 
   useEffect(() => {
+    const toastID = toast.loading('fetching...')
     const getHouses = async ()=>{
       try {
         const resopnse = await fetchHouses()
+        toast.done(toastID)
         dispatch(setHouses(resopnse.data))
-        // //console.log('cashiers', resopnse)
       } catch (error) {
-        //console.log('error, trying to fetch houses.',error)
+        toast.update(toastID, {
+          render: 'Ooops, Error Has Encountered.',
+          type: 'error',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          isLoading: false
+        })
       }
     }
     getHouses()
@@ -57,17 +68,32 @@ function Houses() {
 
   const submitNewHouseHandler = async (e:FormEvent<HTMLFormElement>)=>{
     e.preventDefault()
-    if(!schema.validate(newHouse.password1)) return alert('invalid password')
-    if(newHouse.password1 !== newHouse.password2) return alert('password did\'t match.')
+    if(!schema.validate(newHouse.password1)) return toast('Invalid Password', {type: 'error'})
+    if(newHouse.password1 !== newHouse.password2) return toast('Password Did\'t Match.', {type: 'error'})
     if(newHouse.username && newHouse.password1 && newHouse.city && newHouse.detail && newHouse.name){
+      const toastID = toast.loading('Creating a New House.')
       try {
         const response = await createHouse(newHouse.name, newHouse.city, newHouse.detail, newHouse.username, newHouse.password1)
-        // //console.log('house created successfuly!', response)
+        toast.update(toastID, {
+          render: 'House Created Successfully.',
+          type: 'success',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          isLoading: false
+        })
         dispatch(addHouse(response.data))
         setNewHouse(initialNewHouse)
         closeBtnRef.current?.click()
       } catch (error) {
-        //console.log('error trying to create a house.', error)
+        toast.update(toastID, {
+          render: 'Failed to Create a House.',
+          type: 'error',
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          isLoading: false
+        })
       }
     }
   } 
@@ -79,24 +105,54 @@ function Houses() {
   }
 
   const deleteHouseHandler = async ()=>{
+    const toastID = toast.loading('Deleting a House')
     try {
       await deleteHouse(deleteDetails.deleteID)
-      // //console.log('user deleted successfuly!', response)
+      toast.update(toastID, {
+        render: 'House Deleted Successfully.',
+        type: 'success',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
       dispatch(removeHouse(deleteDetails.deleteID))
       setDeleteDetails({...deleteDetails, showDeleteDialog: false})
     } catch (error) {
-      //console.log('error, trying to delete house', error)
+      toast.update(toastID, {
+        render: 'Failed to Delete the House.',
+        type: 'error',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
     }
   }
 
   const banHouseHandler = async (id:string, isActive:boolean)=>{
+    const toastID = toast.loading('Updating a House')
     try {
       const house = (totalHouses.find((house)=> house._id === id) as HouseType)
       await updateHouse(id, house.name, house.city, house.detail, isActive)
-      //console.log('user banned successfuly!', response)
+      toast.update(toastID, {
+        render: 'House Updated Successfully.',
+        type: 'success',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
       dispatch(setHouseActiveState({id, isActive}))
     } catch (error) {
-      //console.log('error, trying to bas a house', error)
+      toast.update(toastID, {
+        render: 'Failed to Update the House.',
+        type: 'error',
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        isLoading: false
+      })
     }
   }
 
@@ -105,7 +161,6 @@ function Houses() {
   }
   return (
     <div>
-      {/* <h1 className='text-[28px] leading-[34px] font-normal self-center text-[#8d90a0] cursor-pointer'>Cashiers</h1> */}
       <div className="overflow-x-auto">
       {
         totalHouses.length > 0 ? <table className="table">
@@ -152,42 +207,42 @@ function Houses() {
             {/* if there is a button in form, it will close the modal */}
             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" ref={closeBtnRef}>✕</button>
           </form>
-          <div className="p-1 space-y-4 md:space-y-6 sm:p-8 sm:py-2 ">
-              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+          <div className="p-1 space-y-4 md:space-y-6 sm:p-8 sm:py-2">
+              <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-300 md:text-2xl dark:text-white">
                   Create New House
               </h1>
               <form className=" flex flex-col space-y-4 md:space-y-6 " onSubmit={submitNewHouseHandler}>
                   <div className='flex gap-6'>
                     <div className=' flex flex-col gap-4'>
                       <div>
-                          <label htmlFor="housename" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+                          <label htmlFor="housename" className="block mb-2 text-sm font-medium text-gray-300 dark:text-white">Name</label>
                           <input onChange={inputChangeHandler} value={newHouse.name} type="text" name="name" id="housename" 
-                            className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 
+                            className="bg-gray-200 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 
                                         focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 
                                       dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 
                                       dark:focus:border-blue-500" placeholder="house name here" required/>
                       </div>
                       <div>
-                          <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">City</label>
-                          <input onChange={inputChangeHandler} value={newHouse.city} type="text" name="city" id="city" placeholder="city here" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
+                          <label htmlFor="city" className="block mb-2 text-sm font-medium text-gray-300 dark:text-white">City</label>
+                          <input onChange={inputChangeHandler} value={newHouse.city} type="text" name="city" id="city" placeholder="city here" className="bg-gray-200 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
                       </div>
                       <div>
-                          <label htmlFor="details" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Detail</label>
-                          <input onChange={inputChangeHandler} value={newHouse.detail} type="text-area" name="detail" id="detail" placeholder="details here" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
+                          <label htmlFor="details" className="block mb-2 text-sm font-medium text-gray-300 dark:text-white">Detail</label>
+                          <input onChange={inputChangeHandler} value={newHouse.detail} type="text-area" name="detail" id="detail" placeholder="details here" className="bg-gray-200 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
                       </div>
                     </div>
                     <div className=' flex flex-col gap-4'>
                       <div>
-                          <label htmlFor="admin-username" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Admin's Username</label>
-                          <input onChange={inputChangeHandler} value={newHouse.username} type="text" name="username" id="admin-username" placeholder="username here" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
+                          <label htmlFor="admin-username" className="block mb-2 text-sm font-medium text-gray-300 dark:text-white">Admin's Username</label>
+                          <input onChange={inputChangeHandler} value={newHouse.username} type="text" name="username" id="admin-username" placeholder="username here" className="bg-gray-200 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
                       </div>
                       <div>
-                          <label htmlFor="admin-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Admin's Password</label>
-                          <input onChange={inputChangeHandler} value={newHouse.password1} type="password" name="password1" id="admin-password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
+                          <label htmlFor="admin-password" className="block mb-2 text-sm font-medium text-gray-300 dark:text-white">Admin's Password</label>
+                          <input onChange={inputChangeHandler} value={newHouse.password1} type="password" name="password1" id="admin-password" placeholder="••••••••" className="bg-gray-200 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
                       </div>
                       <div>
-                          <label htmlFor="confirm-admin-password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm Admin's Password</label>
-                          <input onChange={inputChangeHandler} value={newHouse.password2} type="password" name="password2" id="confirm-admin-password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
+                          <label htmlFor="confirm-admin-password" className="block mb-2 text-sm font-medium text-gray-300 dark:text-white">Confirm Admin's Password</label>
+                          <input onChange={inputChangeHandler} value={newHouse.password2} type="password" name="password2" id="confirm-admin-password" placeholder="••••••••" className="bg-gray-200 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required/>
                       </div>
                       
                     </div>
@@ -199,8 +254,9 @@ function Houses() {
       </dialog>
     </div>
     {deleteDetails.showDeleteDialog && <MessageDialog title='Delete A House' message='Are you sure you want to DELETE the house?' accept={deleteHouseHandler} decline={()=>{setDeleteDetails({...deleteDetails, showDeleteDialog: false})}}></MessageDialog>}
+    <ToastContainer/>
     </div>
   )
-}
+})
 
 export default Houses

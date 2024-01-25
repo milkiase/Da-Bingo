@@ -64,15 +64,16 @@ function CheckCard({onGameOver}:CheckCardProps) {
             }, 20000)
         }
     }, [hasWon])
+
     const setHasWonHandler = async()=>{
         try {
-            await setGameIsWon(gameID, cardNumber)
             setHasWon(true)
             const voice = new Audio('http://localhost/DaBingoApplause.mp3')
             voice.play()
-            // console.log('game won successfully.', response.data)
+            const response = await setGameIsWon(gameID, cardNumber)
+            console.log('game won successfully.', response.data)
         } catch (error) {
-            // console.log('failed to set game as won.')
+            console.log('failed to set game as won.')
         }
     }
     const blockPlayer = ()=>{
@@ -92,10 +93,10 @@ function CheckCard({onGameOver}:CheckCardProps) {
                 <div className='flex justify-between'>
                     <button className='btn btn-success h-8 min-h-8 my-2 uppercase text-gray-800 rounded-sm'
                         onClick={()=>bingoWinRef.current?.showModal()}
-                        disabled={!isChecked && !canCheckNumber}
+                        disabled={!isChecked || !canCheckNumber}
                     >Bingo</button>
                     <button className='btn btn-error h-8 min-h-8 my-2 uppercase text-gray-800 rounded-sm' 
-                        onClick={()=>bingoBlockRef.current?.showModal()} disabled={!isChecked && !canCheckNumber}>
+                        onClick={()=>bingoBlockRef.current?.showModal()} disabled={!isChecked || !canCheckNumber}>
                             Block
                     </button>
             </div>

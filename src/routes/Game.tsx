@@ -23,6 +23,7 @@ import CheckCard from '../components/CheckCard/CheckCard.component';
 import { selectGameID, selectPattern } from '../store/setup/setupSelectors';
 import WinAmount from '../components/WinAmount';
 import axios from 'axios';
+import { setGameID } from '../store/setup/setupSlice';
 // import { selectPattern } from '../store/setup/setupSelectors';
 
 
@@ -82,16 +83,31 @@ function Game() {
     const randomNumbersRef = useRef(initialRandomNumbers)
     const gameProgress = useRef(0)
     const resetRef = useRef<HTMLDialogElement | null>(null)
-    const [toggleShuffle, setToggleShuffle] = useState(false)
-    const [pageLoaded, setPageLoaded] = useState(false)
+    // const [toggleShuffle, setToggleShuffle] = useState(false)
+    // const [pageLoaded, setPageLoaded] = useState(false)
     const [gameState, gameStateDispatcher] = useReducer(gameReducer, {isStarted: false, isPaused: false, isEnded: true})
     const [autoplaySpeed, setAutoplaySpeed] = useState(8)
+    // const blocker = useBlocker(({currentLocation, nextLocation})=> currentLocation.pathname !== nextLocation.pathname)
     // const autoplaySpeed = useRef(0)
     const setDisplayBallStateHandler = (number:number)=>{
         const letter = getLetter(number)
         setDisplayBallState({letter, color: getColor(letter), number})
     }
-
+    useEffect(()=>{
+        return ()=>{
+            resetGameHandler()
+        }
+    }, [])
+    useEffect(()=>{
+        const hashChangeHandler = (event: HashChangeEvent)=>{
+            event.preventDefault()
+            // event.returnValue('')
+            return ''
+        }
+        // window.onhashchange(hashChangeHandler)
+        window.addEventListener('hashchange', hashChangeHandler, {capture: true})
+    }, [])
+    
     useEffect(()=>{
         setLast5Calls(getLast5Calls(callsList) as TLastCall[])
     }, [callsList])
@@ -136,7 +152,9 @@ function Game() {
                     }
                 }
                 clearInterval(gamePlayInterval)
-                if(gameId !== lastGameID) return setPageError({loading: false, error: true})
+                if(gameId.slice(gameId.length - 6) !== lastGameID) {
+                    return setPageError({loading: false, error: true})
+                }
                 setPageError({loading: false, error: false})
             } catch (error) {
                 //console.log(error)
@@ -207,16 +225,18 @@ function Game() {
     }
     const closeGameHandler = ()=> {
         resetGameHandler()
+        // clearInterval(gamePlayInterval)
+        dispatch(setGameID(''))
         navigate('/')
     }
 
     const gameOverHandler = async (winnerNumber: number)=>{
         try {
             await setGameIsWon(lastGameID, winnerNumber)
-            closeGameHandler()
         } catch (error) {
             // console.log('failed trying to end the game.')
         }
+        closeGameHandler()
     }
     const startGame = ()=>{
         if(gameState?.isEnded){
@@ -224,27 +244,35 @@ function Game() {
             if(gameProgress.current >= 74){
                 resetGameHandler()
                 gameProgress.current = 0
+            }else{
+                const shuffleSound = new Audio('http://localhost/shuffle.mp3')
+                shuffleSound.play()
+                setTimeout(()=>{
+                    shuffleSound.pause()
+                }, 3500)
             }
         }
         gameStateDispatcher({type: GAME_REDUCER_TYPES.started})
         // clearInterval(gamePlayInterval)
         setTimeout(()=>{
             pickNumber()
-        }, 2000)
+        }, gameProgress.current === 0 ? 4000: 1500)
 
-        gamePlayInterval = setInterval(()=>{
-            pickNumber()
-        },  (15 - autoplaySpeed) * 1000)
+        setTimeout(()=>{
+            gamePlayInterval = setInterval(()=>{
+                pickNumber()
+            },  (15 - autoplaySpeed) * 1000)
+        }, gameProgress.current === 0 ? 4000: 0)
     }
 
-    useEffect(()=>{
-        if(pageLoaded){
-            const shuffleSound = new Audio('http://localhost/shuffle.mp3')
-            shuffleSound.play()
-        }else{
-            setPageLoaded(true)
-        }
-    }, [toggleShuffle])
+    // useEffect(()=>{
+        // if(pageLoaded){
+    //         const shuffleSound = new Audio('http://localhost/shuffle.mp3')
+    //         shuffleSound.play()
+    //     }else{
+    //         setPageLoaded(true)
+    //     }
+    // }, [toggleShuffle])
 
     const pauseGame = ()=>{
         clearInterval(gamePlayInterval)
@@ -267,9 +295,9 @@ function Game() {
         else return 'Pause Game'
     }, [gameState])
 
-    const shuffleBoard = ()=>{
-        setToggleShuffle(!toggleShuffle)
-    }
+    // const shuffleBoard = ()=>{
+    //     setToggleShuffle(!toggleShuffle)
+    // }
     const showCheckBoard = useMemo(()=>{
         if(gameState?.isPaused || (gameState?.isEnded && callsList?.length === 75)) return true
         return false
@@ -298,31 +326,32 @@ function Game() {
                 
                 <div className="">
                     
-                    <div className="flex justify-between pb-0 mb-0 no-wrap justify-space-between white-text w-full ">
-                        <div className="flex flex-col text-center mt-0">
-                            <div className="callNumber notranslate"><span>{callsList.length}</span></div>
-                            <div className="callNumber-text uppercase w-8">Total Calls</div>
+                    <div className="flex justify-between pb-0 mb-0 no-wrap justify-space-between white-text w-fit">
+                        <div className="flex flex-col text-center mt-0 w-42">
+                            <div className="callNumber notranslate"><span>{id?.slice(id.length - 6)}</span></div>
+                            <div className="uppercase ">Game</div>
                         </div>
-                        <div className="flex flex-col justify-between">
-                            <div className="callNumber notranslate"><span>{callsList[callsList.length - 2] || 0}</span></div>
-                            <div className="callNumber-text uppercase w-8">Previous Call</div>
-                        </div>
+                        {/* <div className="flex flex-col justify-between"> */}
+                            {/* <div className="callNumber notranslate"><span>{callsList[callsList.length - 2] || 0}</span></div> */}
+                            {/* <div className="callNumber-text uppercase w-8">Previous Call</div> */}
+                            {/* <div className="callNumber-text uppercase w-8">{ id}</div> */}
+                        {/* </div> */}
                     </div>
                     <Pattern  pattern={gamePattern}/>
                     
                 </div>
                 <div className='board-side'>
-                    <BingoBoard toggleShuffle={toggleShuffle}></BingoBoard>
+                    <BingoBoard toggleShuffle={false}></BingoBoard>
                 </div>
             </div>
             <div className='flex justify-between'>
                 <div className='flex flex-col gap-y-4  text-center ml-10 mt-10'>
                     <button className={'btn  text-white' + (btnColor[startPauseBtnValue])}onClick={handleStartClick}> {startPauseBtnValue} </button>
                     {/* <button disabled={gameState?.isStarted} className='btn btn-neutral mx-1 text-white' onClick={callNextNumber}>Call Next Number</button> */}
-                    <button disabled={!gameState?.isPaused} className='btn mx-1' 
+                    <button disabled={gameState?.isStarted} className='btn mx-1' 
                         onClick={()=>resetRef.current?.showModal()}
-                    >Reset Board</button>
-                    <button disabled={!(gameState?.isEnded && callsList.length === 0)} className='btn btn-neutral mx-1 text-white' onClick={shuffleBoard}>Shuffle Board</button>
+                    >Quit Game</button>
+                    {/* <button disabled={!(gameState?.isEnded && callsList.length === 0)} className='btn btn-neutral mx-1 text-white' onClick={shuffleBoard}>Shuffle Board</button> */}
                     <select name="language" id="language" className='ml-1 mr-auto py-1 rounded bg-neutral' 
                         onChange={(e)=>{setLanguage(e.target.value)}} value={ language }
                         disabled={gameState?.isStarted}>

@@ -346,5 +346,6 @@ export const getPresetPatterns = (pattern: string = '') => {
 }
 
 export const getEarning = (game: GameType) => {
-  return game.players.length * game.amount - game.winamount
+  const calculatedEarning = game.players.length * game.amount - game.winamount
+  return (calculatedEarning > 0) ? calculatedEarning : 0
 }
