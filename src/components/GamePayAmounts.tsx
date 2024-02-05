@@ -1,8 +1,9 @@
-import {useState, useEffect, ChangeEvent, FormEvent} from 'react'
+import {useState, useEffect, ChangeEvent} from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectCards, selectBetAmount, selectPercentage, selectWinAmount } from '../store/setup/setupSelectors';
 import {changeBetAmount, changePercentage, changeWinAmount} from '../store/setup/setupSlice';
 // import { numberWithCommas } from '../utils/game.utils';
+
 
 function GamePayAmounts() {
   const dispatch = useDispatch()
@@ -10,7 +11,7 @@ function GamePayAmounts() {
   const betAmount = useSelector(selectBetAmount)
   const percentage = useSelector(selectPercentage)
   const winAmount = useSelector(selectWinAmount)
-  const [goTo, setGoTo] = useState(1)
+  // const [goTo, setGoTo] = useState(1)
   const [showPayAmounts, setShowPayAmounts] = useState(false)
 
   const betAmountChangeHandler = (e:ChangeEvent<HTMLInputElement>)=>{
@@ -33,24 +34,24 @@ function GamePayAmounts() {
     else if(amount > 100) amount = 100
     dispatch(changePercentage(amount))
   }
-  const goToHandler = (event:FormEvent<HTMLFormElement>)=>{
-      event.preventDefault()
-      const anchorlink = document.createElement('a')
-      anchorlink.href = `#${goTo}`
-      anchorlink.click()
-  }
+  // const goToHandler = (event:FormEvent<HTMLFormElement>)=>{
+  //     event.preventDefault()
+      // const anchorlink = document.createElement('a')
+      // anchorlink.href = `#${goTo}`
+      // anchorlink.click()
+  // }
   useEffect(()=>{
       const newWinAmount = Math.floor(((betAmount * cards.length) * (100 - percentage) * 100))/10000
       dispatch(changeWinAmount(newWinAmount))
   }, [percentage, betAmount, cards])
   return (
     <div className='flex flex-wrap justify-between w-full mx-auto pr-4'>
-          <form onSubmit={goToHandler} className='pt-2  flex'>
-            <button className='btn  text-sm rounded-none min-h-6 h-6'>Go To:</button>
-            <input type="number"
+          {/* <form onSubmit={goToHandler} className='pt-2  flex'> */}
+            {/* <button className='btn  text-sm rounded-none min-h-6 h-6' onClick={goToHandler}>Go To:</button> */}
+            {/* <input type="number"
               className=' w-16 outline-none px-1 h-fit'
               value={goTo} onChange={(e)=>{setGoTo(Number(e.target.value))}}/>
-          </form>
+          </form> */}
           <div className='flex justify-between gap-9'>
             {showPayAmounts && <div className='flex flex-wrap'>
               <span className=' mr-16 flex flex-wrap pt-2 text-end'>Tot. Players: <strong className="w-8 h-8 text-end"> {cards.length}</strong></span>
