@@ -9,6 +9,7 @@ type UserInfo = {
 type AuthState = {
     token: string,
 } & UserInfo
+
 const INITIAL_STATE: AuthState = {
     token: '',
     id: '',

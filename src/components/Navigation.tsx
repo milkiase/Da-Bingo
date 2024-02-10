@@ -4,6 +4,7 @@ import { selectToken, selectUserInfo} from '../store/auth/authSelectors';
 import { logOut } from '../store/auth/authSlice';
 // import { resetSetupPage } from '../store/setup/setupSlice';
 import { resetAdminState } from '../store/admin/adminSlice';
+import { resetRoom } from '../store/room/roomSlice';
 
 function Navigation() {
     const dispatch = useDispatch()
@@ -15,6 +16,7 @@ function Navigation() {
     const handleLogout = ()=>{
         dispatch(logOut())
         // dispatch(resetSetupPage())
+        dispatch(resetRoom())
         dispatch(resetAdminState())
         navigate('/login')
     }
@@ -30,7 +32,8 @@ function Navigation() {
             <div className="navbar-center flex">
             {   authToken && 
                 <ul className="menu menu-horizontal px-1">
-                    <li><Link className={'mx-1' + (location.pathname === '/' && ' active')} to={'/'}>Setup</Link></li>
+                    <li><Link className={'mx-1' + (location.pathname === '/' && ' active')} to={'/'}>Room</Link></li>
+                    <li><Link className={'mx-1' + (location.pathname === '/setup' && ' active')} to={'/setup'}>Setup</Link></li>
                     <li><Link className={'mx-1' + (location.pathname === '/admin' && ' active')} to={'/admin'}>Options</Link></li>
                     {/* {isUserAdmin && <li><Link className='mx-1' to={'/admin'}>Admin</Link> </li>}
                     <li><Link className='mx-1' to={'/game/3'}>Game</Link> </li> */}

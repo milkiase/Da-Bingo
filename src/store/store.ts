@@ -18,7 +18,11 @@ const persistedReducer = persistReducer({
 export type RootState = ReturnType<typeof rootReducer>
 export const store = configureStore({
     reducer: persistedReducer,
-    middleware: []
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+        serializableCheck: false
+    })
 })
+
+export type RootActions = typeof store.dispatch
 
 export const persistor = persistStore(store)

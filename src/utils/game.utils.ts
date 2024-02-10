@@ -1,4 +1,4 @@
-import { GameType } from "../store/admin/adminSlice";
+import { CashierType, GameType } from "../store/admin/adminSlice";
 
 export function numberWithCommas(x: number) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -7,7 +7,7 @@ export type PatternTypes = {
   anyLine: 'Any Line',
   diagonal: 'Diagonal',
   diamond: 'Diamond',
-  coverAll: 'Coverall',
+  fullHouse: 'Fullhouse',
   cross: 'Cross',
   custom: 'Custom'
 }
@@ -16,7 +16,7 @@ export const patternTypes: PatternTypes = {
   anyLine: 'Any Line',
   diagonal: 'Diagonal',
   diamond: 'Diamond',
-  coverAll: 'Coverall',
+  fullHouse: 'Fullhouse',
   cross: 'Cross',
   custom: 'Custom'
 }
@@ -32,11 +32,11 @@ export const getLetter = (number: number) => {
 export const getColor = (letter: string) => {
   switch (letter) {
     case "B":
-      return 'blue';
+      return 'purple';
     case "I":
       return 'red';
     case "N":
-      return 'white';
+      return 'blue';
     case "G":
       return 'green';
     case "O":
@@ -162,10 +162,10 @@ export const getPresetPatterns = (pattern: string = '') => {
         ]
       }
       )
-    case 'Coverall':
+    case 'Fullhouse':
       return ({
-        value: "Coverall",
-        label: "Coverall",
+        value: "Fullhouse",
+        label: "Fullhouse",
         unusedLetters: [],
         pattern: [
           [true, true, true, true, true],
@@ -348,4 +348,8 @@ export const getPresetPatterns = (pattern: string = '') => {
 export const getEarning = (game: GameType) => {
   const calculatedEarning = game.players.length * game.amount - game.winamount
   return (calculatedEarning > 0) ? calculatedEarning : 0
+}
+
+export const getUserName = (id: string, users: CashierType[]) => {
+  return users.find((user) => user.id === id)?.name
 }

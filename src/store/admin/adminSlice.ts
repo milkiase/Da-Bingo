@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { fetchAllUsers } from "../../utils/backend.utils";
 
 export type HouseType = {
     _id: string,
@@ -36,7 +37,8 @@ type AdminStateType = {
     dateRange: Value,
     selectedRange: string,
     games: GameType[],
-    houses: HouseType[]
+    houses: HouseType[],
+    allUsers: CashierType[]
 }
 const fromDate = new Date()
 fromDate.setUTCHours(0, 0, 0, 0);
@@ -48,7 +50,8 @@ const initialAdminState: AdminStateType = {
     dateRange: [fromDate, toDate],
     selectedRange: 'Today',
     games: [],
-    houses: []
+    houses: [],
+    allUsers: []
 }
 type SetHouseActiveStateProps = {
     id: string,
@@ -96,10 +99,31 @@ const adminSlice = createSlice({
             state.selectedRange = 'Today'
             state.games = []
             state.houses = []
-        }
+        },
+        setAllUsers(state, action: PayloadAction<CashierType[]>) {
+            state.allUsers = action.payload
+        },
+    },
+    extraReducers(builder) {
+        builder.addCase(fetchAllUsersAsync.fulfilled, (state, action) => {
+            state.allUsers = action.payload
+        })
     }
 })
 
-export const { setCashiers, addCashier, removeCashier, setDateRange, setSelectedRange, setGames, setHouses, addHouse, removeHouse, setHouseActiveState, resetAdminState } = adminSlice.actions
+export const fetchAllUsersAsync = createAsyncThunk('admin/fetchAllUsersAsync',
+    async () => {
+        const res = await fetchAllUsers()
+        // console.log('fetch all users', res.data)
+        return res.data.map((user: CashierType) => ({
+            name: user.name,
+            id: user.id,
+            isAdmin: user.isAdmin,
+            dateCreated: user.dateCreated
+        }))
+    }
+)
+
+export const { setCashiers, addCashier, removeCashier, setDateRange, setSelectedRange, setGames, setHouses, addHouse, removeHouse, setHouseActiveState, resetAdminState, setAllUsers } = adminSlice.actions
 const adminReducer = adminSlice.reducer
 export default adminReducer

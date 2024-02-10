@@ -2,25 +2,29 @@ import {ChangeEvent, useEffect, useState, useReducer, memo, useRef} from 'react'
 import {useNavigate} from 'react-router-dom';
 import Card from '../components/Card';
 import GamePayAmounts from '../components/GamePayAmounts';
-import totalCards from '../cards';
+// import totalCards from '../cards';
 import { useSelector, useDispatch } from 'react-redux';
-import { createGame } from '../utils/backend.utils';
-import { selectBetAmount, selectCards, selectPercentage, selectWinAmount, selectPatternType, selectProfit, selectPattern, selectGameID, selectPrintedCards } from '../store/setup/setupSelectors';
-import { buyCard, changePatternType, printCard, removeCard, resetSetupPage, setGameID, setSetupPattern } from '../store/setup/setupSlice';
-import { selectCurrentGameID } from '../store/game/gameSelectors';
+import { startGameAPI } from '../utils/backend.utils';
+import { selectBetAmount, selectCards, selectWinAmount, selectPatternType, selectPattern, selectGameID, selectPrintedCards, selectIsBuyingCard, selectCardBeingBought, selectErrorBuyingCartela } from '../store/setup/setupSelectors';
+import { buyCardAsync, changePatternType, fetchRoomAsync, printCard, resetErrorBuyingCartela, resetSetupPage, setSetupPattern } from '../store/setup/setupSlice';
+// import { selectCurrentGameID } from '../store/game/gameSelectors';
 import ReactToPrint from 'react-to-print';
 
 import { PatternTypes, getPresetPatterns, patternTypes } from '../utils/game.utils';
 import Pattern from '../components/Pattern/Pattern.component';
 import MessageDialog from '../components/MessageDialog';
-import { resetGame, setGameBetAmount, setGamePatternType, setGamePercentage, setGameWinAmount, setID, setPlayers } from '../store/game/gameSlice';
-import { customAlphabet } from 'nanoid';
+import { resetGame, setGameBetAmount, setGamePatternType, setGameWinAmount, setID, setPlayers } from '../store/game/gameSlice';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { selectIsUserAdmin } from '../store/auth/authSelectors';
+import { selectIsUserAdmin, selectUserInfo } from '../store/auth/authSelectors';
 import { HiPrinter } from 'react-icons/hi';
 import CardToPrint from '../components/CardToPrint/CardToPrint.component';
+
+import { RootActions } from '../store/store';
+import { selectRoom } from '../store/room/roomSelectors';
+import { fetchAllUsersAsync } from '../store/admin/adminSlice';
+import { resetRoom } from '../store/room/roomSlice';
 // import CardNumbers from '../components/CardNumbers';
 
 const defaultPattern = getPresetPatterns().pattern
@@ -36,20 +40,20 @@ const pageStatusReducer = (_state: unknown, action: { type: unknown; })=>{
 }
 
 const Setup = memo(()=>{
-  const dispatch = useDispatch()
+  const dispatch:RootActions = useDispatch()
   const navigate = useNavigate()
   const isUserAdmin = useSelector(selectIsUserAdmin)
   const cards = useSelector(selectCards)
-  const percentage = useSelector(selectPercentage)
+  // const percentage = useSelector(selectPercentage)
   const betAmount = useSelector(selectBetAmount)
   const winAmount = useSelector(selectWinAmount)
-  const profit = useSelector(selectProfit)
+  // const profit = useSelector(selectProfit)
   const setupPatternType = useSelector(selectPatternType)
   const setupPattern = useSelector(selectPattern)
   const [pattern, setPattern] = useState(defaultPattern)
   const [patternType, setPatternType] = useState(setupPatternType)
   const [showNewGameDialog, setShowNewGameDialog] = useState(false)
-  const lastGameID = useSelector(selectCurrentGameID)
+  // const lastGameID = useSelector(selectCurrentGameID)
   const [pageStatus, dispatchPageStatus] = useReducer(pageStatusReducer, {success: true, error: false, loading: false})
   const gameID = useSelector(selectGameID)
   const [modalType, setModalType] = useState('pattern')
@@ -57,15 +61,44 @@ const Setup = memo(()=>{
   const selectedCartelas = useSelector(selectCards)
   const printedCartelas = useSelector(selectPrintedCards)
   const printRef = useRef<HTMLDivElement | null>(null)
+  // const roomID = useSelector(selectRoomID)
+  const room = useSelector(selectRoom)
+  const [totalCards, setTotalCards] = useState<(number | string)[][][]>([])
+  const isBuyingCard = useSelector(selectIsBuyingCard)
+  const cardBeingBought = useSelector(selectCardBeingBought)
+  const userInfo = useSelector(selectUserInfo)
+  const errorBuyingCartela = useSelector(selectErrorBuyingCartela)
+  useEffect(()=>{
+    import((userInfo.username.toLowerCase() === 'lucky0006') ? '../cards_10_20' : '../cards').then((module)=>{
+      setTotalCards(module.default)
+    })
+  }, [userInfo.username])
+
+  useEffect(()=>{
+    dispatch(fetchAllUsersAsync())
+  }, [])
+
+  useEffect(()=>{
+    if(errorBuyingCartela.code === 304 && errorBuyingCartela.isActive){
+      toast.error('This cartela is already sold')
+      dispatch(resetErrorBuyingCartela())
+    }else if(errorBuyingCartela.code === 404 && errorBuyingCartela.isActive){
+      dispatch(resetErrorBuyingCartela())
+      dispatch(resetRoom())
+    }
+  }, [errorBuyingCartela])
+
 
   const startGame = async ()=>{
       setShowNewGameDialog(false)
-      if(percentage && cards.length && winAmount){
+      if(cards.length && winAmount && betAmount){
       // navigate('/game/1')
       const toastID = toast.loading('Creating a new game.')
       try {
         dispatchPageStatus({type: 'loading'})
-        const response = await createGame(gameID, cards, percentage, betAmount, winAmount, profit, patternType)
+        // const response = await createGame(gameID, cards, percentage, betAmount, winAmount, profit, patternType)
+        const response = await startGameAPI(room.roomID, winAmount, betAmount, patternType)
+        // console.log(response.data)
         toast.update(toastID, {
             render: 'Game Created Successfuly.',
             type: 'success',
@@ -75,17 +108,18 @@ const Setup = memo(()=>{
             isLoading: false
         })
         dispatchPageStatus({type: 'success'})
-        const id = response.data.gameid
-        dispatch(setGameID(gameID))
+        const id = response.data.game.gameid
+        // dispatch(setGameID(id.slice(id.length - 6)))
         dispatch(resetGame())
         dispatch(setGameBetAmount(betAmount))
         dispatch(setGamePatternType(patternType))
         dispatch(setGameWinAmount(winAmount))
-        dispatch(setGamePercentage(percentage))
+        // dispatch(setGamePercentage(percentage))
         dispatch(resetSetupPage())
         dispatch(setID(gameID))
-        dispatch(setPlayers(cards))
+        dispatch(setPlayers(response.data.game.players.map((player: {numberselected: number}) => player.numberselected)))
         navigate('/game/' + id)
+
         // redirect('/game/' + id)
       } catch (error) {
         //console.log(error)
@@ -113,10 +147,10 @@ const Setup = memo(()=>{
       setPattern(newPattern)
   }
 
-  useEffect(()=>{
-    const nanoid = customAlphabet('0123456789', 6)
-    if(!gameID) dispatch(setGameID(nanoid()))
-  }, [])
+  // useEffect(()=>{
+  //   const nanoid = customAlphabet('0123456789', 6)
+  //   if(!gameID) dispatch(setGameID(nanoid()))
+  // }, [])
 
   useEffect(()=>{
     const newPattern = getPresetPatterns(patternType).pattern
@@ -136,23 +170,16 @@ const Setup = memo(()=>{
   const resetButtonHandler = ()=>{
     if(isUserAdmin) dispatch(resetSetupPage())
   }
-  const goToLastGame = ()=>{
-    navigate('/game/' + lastGameID)
-  }
-  // if(pageStatus?.error) return <div className='w-full h-full flex pt-[40vh] justify-center align-middle '>
-  //       <div className='flex text-center'>
-  //           <span className="loading loading-ring loading-lg"></span>
-  //           <a href='/' className='link self-center ml-4'>Refresh</a>
-  //       </div>
-  //       <ToastContainer/>
-
-  //   </div>
+  // const goToLastGame = ()=>{
+  //   navigate('/game/' + lastGameID)
+  // }
+  
   const [cartelasPage, setCartelasPage] = useState(1)
   const nextCartelasPage = ()=>{
-    console.log('next attempt', cartelasPage)
-    if(cartelasPage < 32){
+    // console.log('next attempt', cartelasPage)
+    if(cartelasPage < (totalCards.length / 32)){
       setCartelasPage(cartelasPage + 1)
-      console.log('next', cartelasPage)
+      // console.log('next', cartelasPage)
     }
   }
 
@@ -175,7 +202,7 @@ const Setup = memo(()=>{
     setSelectedCartelaNumber(Number(e.target.value) || '')
   }
   const buySelectedCartela = ()=>{
-    if(selectedCartelaNumber) dispatch(buyCard(selectedCartelaNumber))
+    if(selectedCartelaNumber) dispatch(buyCardAsync({roomId: room.roomID, cardNumber: selectedCartelaNumber}))
     document.getElementById('cartela-input')?.focus()
   }
 
@@ -185,10 +212,15 @@ const Setup = memo(()=>{
     // document.getElementById(`print-btn-${selectedCartelaNumber}`)?.click()
   }
 
-  const removeSelectedCartela = ()=>{
-    if(selectedCartelaNumber) dispatch(removeCard(selectedCartelaNumber))
-    document.getElementById('cartela-input')?.focus()
-  }
+  // const removeSelectedCartela = ()=>{
+  //   if(selectedCartelaNumber) dispatch(removeCard(selectedCartelaNumber))
+  //   document.getElementById('cartela-input')?.focus()
+  // }
+
+  useEffect(()=>{
+    dispatch(fetchRoomAsync(room.gameID))
+  }, [])
+
   return (
     <div className='px-2'>
         <div className='flex justify-between items-center px-4 py-1'>
@@ -199,7 +231,7 @@ const Setup = memo(()=>{
           {totalCards.slice((cartelasPage-1) * 32, cartelasPage * 32).map((cardArray, i)=> <Card i={(i + 1) + (32 * (cartelasPage-1))} cardArray={cardArray} key={i}/>)}
           <div className="flex justify-center gap-4 items-center bg-gray-800 rounded-lg px-4 py-2">
             <button className="className='btn active:bg-green-800 bg-green-500 hover:bg-green-600 rounded text-white px-8 h-10 min-h-8" onClick={prevCartelasPage}>Prev</button>
-            <span>{cartelasPage} / 32</span>
+            <span>{cartelasPage} / {Math.ceil(totalCards.length / 32)}</span>
             <button className="className='btn active:bg-green-800 bg-green-500 hover:bg-green-600 rounded text-white px-8 h-10 min-h-8" onClick={nextCartelasPage}>Next</button>
           </div>
         </div>
@@ -233,12 +265,19 @@ const Setup = memo(()=>{
             {/* <CardNumbers cardArray={totalCards[3] || []} i={3}></CardNumbers> */}
             <div className='flex flex-col self-center mb-4'>
               <label htmlFor='cartelaSelector' className=' self-center mr-3'>Insert Cartela Number</label>
-              <input id="cartela-input" className='text-white cursor-text px-2 py-1 text-center' autoFocus type="number" min={1} max={1000}
+              <input 
+                disabled={isBuyingCard}
+                id="cartela-input" className='text-white cursor-text px-2 py-1 text-center' autoFocus type="number" min={1} max={totalCards.length}
                 value={selectedCartelaNumber} onChange={changeSelectedCartelaNumber}
               ></input>
             </div>
             <div className=' flex justify-around mx-auto w-full'>
-              <button disabled={selectedCartelas.includes(selectedCartelaNumber || -1) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 } onClick={buySelectedCartela} className='text-white rounded-sm font-normal min-h-8 h-8 btn w-24 btn-success'> Buy </button>
+              <button 
+                  disabled={selectedCartelas.includes(selectedCartelaNumber || -1) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 } 
+                  onClick={buySelectedCartela} 
+                  className='text-white rounded-sm font-normal min-h-8 h-8 btn w-24 btn-success'>
+                    {cardBeingBought === selectedCartelaNumber? <span className='loading loading-spinner loading-sm '></span> : 'Buy'} 
+              </button>
               {/* <button disabled={(printedCartelas.includes(selectedCartelaNumber || -1) || !selectedCartelas.includes(selectedCartelaNumber || -1)) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 } onClick={printSelectedCartela} className='  text-white rounded-sm font-normal min-h-8 h-8 btn w-24 btn-primary flex flex-row'><HiPrinter className=" text-gray-900"/><span>Print</span></button> */} 
               <>
                 <ReactToPrint trigger={()=><button disabled={(printedCartelas.includes(selectedCartelaNumber || -1) || !selectedCartelas.includes(selectedCartelaNumber || -1))} className='  text-white rounded-sm font-normal min-h-8 h-8 btn w-24 btn-primary flex flex-row'>
@@ -253,25 +292,28 @@ const Setup = memo(()=>{
                   </div>
               </>
               
-              <button disabled={(!selectedCartelas.includes(selectedCartelaNumber || -1) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 ) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 } 
-                onClick={removeSelectedCartela} className='  text-white rounded-sm font-normal min-h-8 h-8 btn w-24 btn-error'>Remove</button>
+              {/* <button disabled={(!selectedCartelas.includes(selectedCartelaNumber || -1) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 ) || (totalCards[(selectedCartelaNumber || 0)-1] || []).length === 0 } 
+                onClick={removeSelectedCartela} className='  text-white rounded-sm font-normal min-h-8 h-8 btn w-24 btn-error'>Remove</button> */}
             </div>
           </div>}
         </div>}
+        {isUserAdmin && <>
           <div className='selt-center pt-2'>
             <button className='btn btn-error min-h-6 h-6 rounded-sm mr-8' disabled={!isUserAdmin} onClick={resetButtonHandler}>Reset</button>
             <button className='link' onClick={changePatternHandler}>change pattern</button>
-          </div>
+            </div>
+          
           <div>
           <button onClick={()=>{setShowNewGameDialog(true)}} type='button' className='btn bg-green-500 hover:bg-green-600 rounded text-white px-8 h-10 min-h-8'>
-            Create Game 
+            Start The Game 
           </button>
-          {lastGameID &&<button className='link link-info ml-4' onClick={goToLastGame}>
+          {/* {lastGameID &&<button className='link link-info ml-4' onClick={goToLastGame}>
             resume last game
-          </button>}
+          </button>}  */}
           </div>
-          {
-            showNewGameDialog && <MessageDialog title='Create A New Game' message='Are you sure you want to start a new game?' accept={startGame} decline={()=>{setShowNewGameDialog(false)}}></MessageDialog>
+          </>}
+          { 
+            showNewGameDialog && <MessageDialog title='Create A New Game' message='Are you sure you want to start the game?' accept={startGame} decline={()=>{setShowNewGameDialog(false)}}></MessageDialog>
           }
         </div> 
         {pageStatus?.loading && 

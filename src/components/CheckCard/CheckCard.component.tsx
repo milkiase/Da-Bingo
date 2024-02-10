@@ -4,11 +4,12 @@ import { selectCalls, selectPlayers, selectCurrentGameID } from '../../store/gam
 import { removePlayer } from '../../store/game/gameSlice';
 import Confetti from 'react-confetti';
 
-import TOTAL_CARDS from '../../cards';
+// import totalCards from '../../cards';
 import Pattern from '../Pattern/Pattern.component';
 import './CheckCard.styles.scss';
 import { getPresetPatterns } from '../../utils/game.utils';
 import { setGameIsWon } from '../../utils/backend.utils';
+import { selectUserInfo } from '../../store/auth/authSelectors';
 
 const initialPattern = getPresetPatterns().pattern
 
@@ -27,11 +28,18 @@ function CheckCard({onGameOver}:CheckCardProps) {
     const gameID = useSelector(selectCurrentGameID)
     const bingoWinRef = useRef<HTMLDialogElement | null>(null)
     const bingoBlockRef = useRef<HTMLDialogElement | null>(null)
+    const [totalCards, setTotalCards] = useState<(number | string)[][][]>([])
+    const userInfo = useSelector(selectUserInfo)
+    useEffect(()=>{
+        import((userInfo.username.toLowerCase() === 'lucky0006') ? '../../cards_10_20' : '../../cards').then((module)=>{
+        setTotalCards(module.default)
+        })
+    }, [userInfo.username])
 
     const checkCardHandler = (e:FormEvent<HTMLFormElement>)=>{
         e.preventDefault()
-        if(cardNumber < 1 || cardNumber > 1000) return
-        const cardValues = TOTAL_CARDS[cardNumber - 1]
+        if(cardNumber < 1 || cardNumber > 4000) return
+        const cardValues = totalCards[cardNumber - 1]
         const newPattern = [...pattern]
         for(let i = 0; i < cardValues.length; i++){
             for(let j=0; j < 5; j++){
@@ -70,22 +78,24 @@ function CheckCard({onGameOver}:CheckCardProps) {
             setHasWon(true)
             const voice = new Audio('http://localhost/DaBingoApplause.mp3')
             voice.play()
-            const response = await setGameIsWon(gameID, cardNumber)
-            console.log('game won successfully.', response.data)
+            await setGameIsWon(gameID, cardNumber)
+            // const response = await setGameIsWon(gameID, cardNumber)
+            // console.log('game won successfully.', response.data)
         } catch (error) {
-            console.log('failed to set game as won.')
+            // console.log('failed to set game as won.')
         }
     }
     const blockPlayer = ()=>{
         dispatch(removePlayer(cardNumber))
     }
+    // console.log('players', players)
     const canCheckNumber = useMemo(()=>{
         return players.includes(cardNumber)
     }, [players, cardNumber])
     return (
         <div className='flex flex-col justify-center align-middle px-8 bg-neutral-focus rounded'>
             <form onSubmit={checkCardHandler} className='flex gap-6 mt-2'>
-                <input type="number" className=' input rounded-sm w-28' value={cardNumber} onChange={cardNumberChangeHandler} />
+                <input type="number" className=' input rounded-sm w-28' value={cardNumber.toString()} onChange={cardNumberChangeHandler} />
                 <button className='btn btn-primary rounded-sm' disabled={!canCheckNumber}>Check</button>
             </form>
             <div className='flex  flex-col mx-auto'>

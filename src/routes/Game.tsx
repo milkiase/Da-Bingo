@@ -24,6 +24,7 @@ import { selectGameID, selectPattern } from '../store/setup/setupSelectors';
 import WinAmount from '../components/WinAmount';
 import axios from 'axios';
 import { setGameID } from '../store/setup/setupSlice';
+import { resetRoom } from '../store/room/roomSlice';
 // import { selectPattern } from '../store/setup/setupSelectors';
 
 
@@ -76,7 +77,7 @@ function Game() {
     //     setGamePattern(JSON.parse(localStorage.getItem('pattern') as string))
     // },[gamePatternType])
     const [isAudioLoaded, setIsAudioLoaded] = useState(false)
-    const [pageError, setPageError] = useState({loading: true, error: false})
+    const [pageStatus, setPageStatus] = useState({loading: true, error: false})
     const callsList = useSelector(selectCalls)
     const [displayBallState, setDisplayBallState] = useState(INITIAL_BALL_STATE)
     const [last5Calls, setLast5Calls] = useState<TLastCall[]>([])
@@ -122,23 +123,9 @@ function Game() {
             }
         }
         testLocalServer()
-        const fetchGame = (gameId: string)=>{
+        const fetchGame = async(gameId: string)=>{
             try {
-                // const response = await getGame(gameId)
-                //console.log(response.data)
-                // const {players, scores, isWon, _id, amount, pattern, winamount, percentage} = response.data
-                //console.log({players, scores, isWon, _id, amount, pattern, winamount, percentage})
-                //console.log(response)
-                // dispatch(setPlayers(players as number[]) )
-                // dispatch(setCalls(scores))
-                // setLast5Calls(getLast5Calls(scores) as TLastCall[])
-                // dispatch(setIsWon(isWon))
-                // dispatch(setID(_id))
-                // dispatch(setGameBetAmount(amount))
-                // dispatch(setGamePatternType(pattern))
-                // dispatch(setGameWinAmount(winamount))
-                // dispatch(setGamePercentage(percentage))
-                // const length:number = scores.length as number
+                
                 const length = callsList.length
                 setDisplayBallStateHandler(callsList[length - 1] || 0)
                 gameProgress.current = length
@@ -152,13 +139,14 @@ function Game() {
                     }
                 }
                 clearInterval(gamePlayInterval)
+                // console.log(gameId , '--', lastGameID)
                 if(gameId.slice(gameId.length - 6) !== lastGameID) {
-                    return setPageError({loading: false, error: true})
+                    return setPageStatus({loading: false, error: true})
                 }
-                setPageError({loading: false, error: false})
+                setPageStatus({loading: false, error: false})
             } catch (error) {
-                //console.log(error)
-                setPageError({loading: false, error: true})
+                // console.log(error)
+                setPageStatus({loading: false, error: true})
             }
         }
         fetchGame(id as string)
@@ -215,6 +203,7 @@ function Game() {
     }
     const resetGameHandler = async ()=>{
         dispatch(resetGame())
+        dispatch(resetRoom())
         clearInterval(gamePlayInterval)
         gameStateDispatcher({type: GAME_REDUCER_TYPES.ended})
         try {
@@ -275,14 +264,16 @@ function Game() {
     // }, [toggleShuffle])
 
     const pauseGame = ()=>{
+        if(callsList.length === 0) return
         clearInterval(gamePlayInterval)
         gameStateDispatcher({type: GAME_REDUCER_TYPES.paused})
     }
     
     const handleStartClick = ()=>{
-        if(gameState?.isEnded || gameState?.isPaused){
+        if((gameState?.isEnded && callsList.length === 0) || gameState?.isPaused){
             startGame()
-        }else{
+        }else if(gameState?.isEnded && callsList.length > 0) closeGameHandler()
+        else{
             pauseGame()
         }
 
@@ -309,10 +300,10 @@ function Game() {
         // autoplaySpeed.current = value as number
     }
 
-    if(pageError.error || pageError.loading) return <div className='w-full h-full flex pt-[40vh] justify-center align-middle '>
+    if(pageStatus.error || pageStatus.loading) return <div className='w-full h-full flex pt-[40vh] justify-center align-middle '>
         <div className='flex text-center'>
             <span className="loading loading-ring loading-lg"></span>
-            {pageError.error && <Link to={'/'} className='link self-center ml-4'>Go Back</Link>}
+            {pageStatus.error && <Link to={'/'} className='link self-center ml-4'>Go Back</Link>}
         </div>
     </div>
     if(!isAudioLoaded){
@@ -327,9 +318,12 @@ function Game() {
                 <div className="">
                     
                     <div className="flex justify-between pb-0 mb-0 no-wrap justify-space-between white-text w-fit">
-                        <div className="flex flex-col text-center mt-0 w-42">
+                        <div className="flex flex-col text-center mt-0 w-40">
+                            <span className="navbar-start normal-case w-full light:bg-slate-800 mt-4" id='logo'>
+                                <img src='https://i.imgur.com/1B8elZ1.png' alt="Lucky Bingo" className=' h-[9.32vh] w-48  !bg-cover '/>
+                            </span>
                             <div className="callNumber notranslate"><span>{id?.slice(id.length - 6)}</span></div>
-                            <div className="uppercase ">Game</div>
+                            {/* <div className="uppercase ">Game</div> */}
                         </div>
                         {/* <div className="flex flex-col justify-between"> */}
                             {/* <div className="callNumber notranslate"><span>{callsList[callsList.length - 2] || 0}</span></div> */}
@@ -337,7 +331,9 @@ function Game() {
                             {/* <div className="callNumber-text uppercase w-8">{ id}</div> */}
                         {/* </div> */}
                     </div>
-                    <Pattern  pattern={gamePattern}/>
+                    <div className='mx-auto w-fit'>
+                        <Pattern  pattern={gamePattern} hasHeader={false}/>
+                    </div>
                     
                 </div>
                 <div className='board-side'>
@@ -345,7 +341,7 @@ function Game() {
                 </div>
             </div>
             <div className='flex justify-between'>
-                <div className='flex flex-col gap-y-4  text-center ml-10 mt-10'>
+                <div className='flex flex-col gap-y-4  text-center ml-6 mt-10 '>
                     <button className={'btn  text-white' + (btnColor[startPauseBtnValue])}onClick={handleStartClick}> {startPauseBtnValue} </button>
                     {/* <button disabled={gameState?.isStarted} className='btn btn-neutral mx-1 text-white' onClick={callNextNumber}>Call Next Number</button> */}
                     <button disabled={gameState?.isStarted} className='btn mx-1' 

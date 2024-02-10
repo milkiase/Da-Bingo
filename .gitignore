@@ -15,7 +15,7 @@ node_modules
 dist
 dist.digital_ocean_end
 config
-public
+public/public
 dist-ssr
 *.local
 

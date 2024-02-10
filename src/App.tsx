@@ -7,8 +7,12 @@ import Game from './routes/Game';
 
 import './App.css'
 // import Navigation from './components/Navigation';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectToken, selectIsUserAdmin, selectIsUserSuperAdmin} from './store/auth/authSelectors';
+import { selectRoom } from './store/room/roomSelectors';
+import { RootActions } from './store/store';
+import { fetchAllUsersAsync } from './store/admin/adminSlice';
+
 // import { setSystemError } from './store/auth/authSlice';
 // import axios from 'axios';
 // import CardNumbers from './components/CardNumbers';
@@ -22,6 +26,7 @@ const GamesDetails = lazy(()=> import('./routes/admin-routes/GamesDetails/GamesD
 const Cashiers = lazy(()=> import('./routes/admin-routes/Cashiers/Cashiers.component'))
 const Dashboard = lazy(()=> import('./routes/admin-routes/Dashboard/Dashboard.component'))
 const Navigation = lazy(()=> import('./components/Navigation'))
+const Rooms = lazy(()=> import('./routes/Rooms'))
 
 // import cards from './cards'
 // import Kartela from './components/Kartela';
@@ -30,16 +35,20 @@ const Navigation = lazy(()=> import('./components/Navigation'))
 // for(let i=0; i< 1000; i++){
 //   KartelasToPrint.push(cards[i])
 // }
+
 function App() {
-  // const dispatch = useDispatch()
+  const dispatch:RootActions = useDispatch()
   // const error = useSelector(selectSystemError)
   const {pathname} = useLocation()
   const authToken = useSelector(selectToken)
   const isUserAdmin = useSelector(selectIsUserAdmin)
   const isUserSuperAdmin = useSelector(selectIsUserSuperAdmin)
-
+  const hostedRoom = useSelector(selectRoom)
   // const [error, setError] = useState(true)
   useEffect(()=>{
+    if(isUserAdmin){
+      dispatch(fetchAllUsersAsync())
+    }
     // const testLocalServer = async()=>{
     //   try {
     //     await axios.get('http://localhost/Amh%20B_Track%20(1).mp3')
@@ -61,8 +70,9 @@ function App() {
           { (!pathname.startsWith('/game/')) && <Navigation></Navigation>}
           {
             authToken ? <Routes>
-            <Route path='/' element={<Setup/>}></Route>
-            <Route path='/login' element={authToken ? <Setup/> : <Login/>}></Route>
+            <Route path='/' element={<Rooms/>}></Route>
+            <Route path='/setup' element={hostedRoom.roomID ? <Setup/> : <Rooms/>}></Route>
+            <Route path='/login' element={authToken ? <Rooms/> : <Login/>}></Route>
             <Route path='/admin' element={<Admin/>}>
               <Route index element={<Dashboard/>}></Route>
               <Route path='cashiers' element={isUserAdmin ? <Cashiers/> : <Dashboard/>}></Route>
