@@ -1,8 +1,8 @@
 import axios from "axios";
 import { Value } from "../store/admin/adminSlice";
-// const ADDRESS = 'http://206.189.182.126:4000/api/v1'
+const ADDRESS = 'https://da-bingo-api.onrender.com/api/v1'
 // const ADDRESS = 'http://10.14.29.241:4000/api/v1'
-const ADDRESS = 'http://lucky-bingo-backend.eu-4.evennode.com/api/v1'
+// const ADDRESS = 'http://lucky-bingo-backend.eu-4.evennode.com/api/v1'
 
 export const loginUser = (name: string, password: string) => {
         return axios.post(ADDRESS + '/users/login', { name, password })
